@@ -25,58 +25,57 @@ struct AutomaCLI {
 
     static func autoUpdate() {
         do {
-            let shell = try Shell()
+            let config = try loadConfig()
+            let repoPath = config.repoPath
 
-            let localTagOutput = try Shell.run("git describe --tags --abbrev=0")
-            guard let localTag = localTagOutput.stdout?.trimmingCharacters(in: .whitespacesAndNewlines), !localTag.isEmpty else {
-                print("No local tag found.")
-                return
+            // Change current directory to repoPath
+            let currentDirectory = FileManager.default.currentDirectoryPath
+            defer {
+                // Restore original directory after function exits
+                FileManager.default.changeCurrentDirectoryPath(currentDirectory)
             }
-            
-            let remoteTagsOutput = try Shell.run("git ls-remote --tags origin")
-            guard let remoteTags = remoteTagsOutput.stdout else {
-                print("No remote tags found.")
-                return
-            }
-
-            let tagPattern = #"refs/tags/([^\^\n]+)"#
-            let tagRegex = try NSRegularExpression(pattern: tagPattern)
-            let matches = tagRegex.matches(in: remoteTags, range: NSRange(remoteTags.startIndex..., in: remoteTags))
-
-            let remoteTagList = matches.compactMap {
-                Range($0.range(at: 1), in: remoteTags).map { String(remoteTags[$0]) }
-            }.sorted(by: { $0.compare($1, options: .numeric) == .orderedDescending })
-
-            guard let latestRemoteTag = remoteTagList.first, latestRemoteTag != localTag else {
-                print("Already on the latest version: \(localTag)")
+            guard FileManager.default.changeCurrentDirectoryPath(repoPath) else {
+                print("Error: Could not change to repository directory: \(repoPath)")
                 return
             }
 
-            print("New version available: \(latestRemoteTag). Updating from \(localTag)...")
+            print("Checking for updates...")
+            _ = try Shell.run("git fetch origin main")
 
-            let osName: String
-            switch shell.operatingSystem {
-            case .macos:
-                osName = "macos"
-            case .linux:
-                osName = "linux"
-            case .unknown(let value):
-                print("Unsupported OS: \(value)")
+            let localCommitOutput = try Shell.run("git rev-parse HEAD")
+            guard let localCommit = localCommitOutput.stdout?.trimmingCharacters(in: .whitespacesAndNewlines), !localCommit.isEmpty else {
+                print("Error: Could not get local commit hash.")
                 return
             }
 
-            let fileName = "\(osName)-\(latestRemoteTag).bin"
-            let downloadURL = "https://github.com/YourOrg/YourRepo/releases/download/\(latestRemoteTag)/\(fileName)"
-
-            let downloadCommand = "curl -L -o /tmp/\(fileName) \(downloadURL)"
-            let downloadResult = try Shell.run(downloadCommand)
-
-            if downloadResult.isError {
-                print("Failed to download update: \(downloadResult.stderr ?? "Unknown error")")
+            let remoteCommitOutput = try Shell.run("git rev-parse origin/main")
+            guard let remoteCommit = remoteCommitOutput.stdout?.trimmingCharacters(in: .whitespacesAndNewlines), !remoteCommit.isEmpty else {
+                print("Error: Could not get remote commit hash.")
                 return
             }
 
-            print("Downloaded new binary to /tmp/\(fileName)")
+            if localCommit != remoteCommit {
+                print("New version available. Updating...")
+                _ = try Shell.run("git pull origin main")
+                print("Building AutomaCLI...")
+                _ = try Shell.run("swift build -c release")
+
+                let binPath = "\(repoPath)/.build/release/automa"
+                let linkPath = "/usr/local/bin/automa"
+
+                print("Creating symbolic link for AutomaCLI...")
+                _ = try Shell.run("sudo rm -f \(linkPath)") // Use -f to force remove without prompt
+                let symlinkResult = try Shell.run("sudo ln -s \(binPath) \(linkPath)")
+                if symlinkResult.isError {
+                    print("Warning: Failed to create symbolic link. You may need to add /usr/local/bin to your PATH or run the script with appropriate permissions. Error: \(symlinkResult.stderr ?? "Unknown error")")
+                } else {
+                    print("AutomaCLI updated and symlinked successfully.")
+                }
+            } else {
+                print("AutomaCLI is already up to date.")
+            }
+        } catch let error as ConfigError {
+            print("Configuration error: \(error.description)")
         } catch {
             print("Update check failed: \(error)")
         }
