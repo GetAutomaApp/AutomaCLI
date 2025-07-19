@@ -9,9 +9,9 @@ REPO_DIR="$HOME/.automacli_repo" # Default clone location
 # Check if config file exists and warn
 if [ -f "$CONFIG_FILE" ]; then
     echo "Warning: Existing configuration file at $CONFIG_FILE will be overwritten."
-    read -p "Do you want to continue? (y/N): " response
-    if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        echo "Aborting setup."
+    if [ "$AUTOMA_FORCE_OVERWRITE" != "true" ]; then
+        echo "Error: Configuration file already exists at $CONFIG_FILE. To overwrite, set AUTOMA_FORCE_OVERWRITE=true."
+        echo "Example: AUTOMA_FORCE_OVERWRITE=true curl -sSL https://raw.githubusercontent.com/GetAutomaApp/AutomaCLI/main/setup.sh | bash"
         exit 1
     fi
 fi
