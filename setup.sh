@@ -51,7 +51,7 @@ if [ -f "$LINK_PATH" ]; then
     echo "Removing existing symbolic link at $LINK_PATH"
     sudo rm "$LINK_PATH"
 fi
-sudo ln -s "$BIN_PATH" "$LINK_PATH" || { echo "Failed to create symbolic link. You may need to add /usr/local/bin to your PATH."; exit 1; }
+sudo ln -s "$BIN_PATH" "$LINK_PATH" || echo "Warning: Failed to create symbolic link. You may need to add /usr/local/bin to your PATH or run the script with appropriate permissions."
 
 echo "You can now run AutomaCLI using the 'automa' command."
 
