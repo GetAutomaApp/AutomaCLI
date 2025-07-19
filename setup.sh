@@ -43,7 +43,7 @@ EOF
 echo "Setup complete. AutomaCLI built from source in $REPO_DIR and config saved to $CONFIG_FILE."
 
 # Create a symbolic link to the binary
-BIN_PATH="$REPO_DIR/.build/release/AutomaCLI"
+BIN_PATH="$REPO_DIR/.build/release/automa"
 LINK_PATH="/usr/local/bin/automa"
 
 echo "Creating symbolic link for AutomaCLI..."
