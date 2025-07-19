@@ -32,7 +32,7 @@ struct AutomaCLI {
                 print("No local tag found.")
                 return
             }
-
+            
             let remoteTagsOutput = try Shell.run("git ls-remote --tags origin")
             guard let remoteTags = remoteTagsOutput.stdout else {
                 print("No remote tags found.")
