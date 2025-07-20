@@ -1,0 +1,23 @@
+import SwiftUI
+
+/**
+The `__CAPNAME__Component` is a reusable component that ___
+
+Add a detailed description here of how to use this
+
+- Parameters:
+    - config: The Config Used to manage state & modifications to  `__CAPNAME__Component`
+- Returns: some View
+
+To see usage examples & visuals, check out `__CAPNAME__ModifierDocumentation.md`
+*/
+internal struct __CAPNAME__Component: View {
+    /// Component configuration
+    @ObservedObject public var config: __CAPNAME__ComponentConfig = __CAPNAME__ComponentConfig()
+
+    /// Component body
+    public var body: some View {
+        Text("Hello, __CAPNAME__!")
+            .foregroundColor(config.textColor)
+    }
+}

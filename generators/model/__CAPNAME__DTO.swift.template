@@ -1,0 +1,26 @@
+import Vapor
+
+/// Represents a data transfer object for `__CAPNAME__`.
+public struct __CAPNAME__DTO: Content {
+    /// The unique identifier for the DTO.
+    public var id: UUID?
+    /// The creation date of the DTO.
+    public var createdAt: Date?
+    /// The last update date of the DTO.
+    public var updatedAt: Date?
+    /// The deletion date of the DTO.
+    public var deletedAt: Date?
+
+    /// Initializes a new instance of `__CAPNAME__DTO`.
+    /// - Parameters:
+    ///   - id: The unique identifier for the DTO.
+    ///   - createdAt: The creation date of the DTO.
+    ///   - updatedAt: The last update date of the DTO.
+    ///   - deletedAt: The deletion date of the DTO.
+    public init(id: UUID?, createdAt: Date?, updatedAt: Date?, deletedAt: Date?) {
+        self.id = id
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
+    }
+}

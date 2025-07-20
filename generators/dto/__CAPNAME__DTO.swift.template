@@ -1,0 +1,13 @@
+import Vapor
+
+/// Represents a data transfer object for `__CAPNAME__`.
+public struct __CAPNAME__DTO: Content {
+    /// The unique identifier for the DTO.
+    public var id: UUID?
+
+    /// Initializes a new instance of `__CAPNAME__DTO`.
+    /// - Parameter id: The unique identifier for the DTO.
+    public init(id: UUID?) {
+        self.id = id
+    }
+}

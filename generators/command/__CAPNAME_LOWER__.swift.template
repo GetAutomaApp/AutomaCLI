@@ -1,0 +1,22 @@
+import Vapor
+
+internal struct __CAPNAME__Command: Command {
+    /// Explain what this command is for
+    public var help: String {
+        "Your Help Text Here"
+    }
+
+    /// All command argumentts
+    public struct Signature: CommandSignature {
+        /// Arg description here
+        @Argument(name: "arg", help: "arg description here")
+        public var arg: String
+    }
+
+    /// Function to execute when command is called
+    public func run(using _: CommandContext, signature: Signature) throws {
+        let arg = signature.arg
+
+        print("\(arg)")
+    }
+}

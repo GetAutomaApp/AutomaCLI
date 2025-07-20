@@ -1,0 +1,24 @@
+import SwiftUI
+
+/// All different variants of __CAPNAME__
+/// - generic: Represents the default state of __CAPNAME__
+public enum __CAPNAME__ComponentVariants {
+    case generic
+}
+
+/// Represents the configuration for `__CAPNAME__Component`.
+/// Add a short description here about the config
+public class __CAPNAME__ComponentConfig: ObservableObject {
+    /// Some Property description here
+    @Published public var someProperty: String = "Default Value"  // Default value
+
+    /// The component variant
+    @Published public var variant: __CAPNAME__ComponentVariants = .generic
+
+    /// __CAPNAME__ default text color
+    public let textColor: Color = .black
+    
+    deinit {
+        return
+    }
+}

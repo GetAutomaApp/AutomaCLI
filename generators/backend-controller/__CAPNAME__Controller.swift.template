@@ -1,0 +1,19 @@
+import Fluent
+import Vapor
+
+internal struct __CAPNAME__Controller: RouteCollection {
+    public func boot(routes: RoutesBuilder) throws {
+        let __CAPNAME_HASKELL__Route = routes.grouped("__CAPNAME_DASHED__")
+
+        __CAPNAME_HASKELL__Route.get("request", use: request)
+    }
+
+    // use npm run generate  contoller-route <controller name>:<route name> to smartly insert a new route!
+
+
+    @Sendable
+    public func request(req: Request) async throws -> HTTPStatus {
+        return .noContent
+    }
+}
+

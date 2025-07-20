@@ -1,0 +1,19 @@
+import Alamofire
+import Foundation
+import DataTypes
+
+// NOTE: This ControllerInteractor can be used for 3rd party apis on both the frontend + backend
+// A ControllerInteractor automatically gets generated when creating a backend-controller (on client)
+internal struct __CAPNAME__ControllerInteractor: BackendControllerInteractor {
+    /// Base URL of controller server
+    public let baseURL: String
+
+    /// Makes a request to /__CAPNAME_DASHED__/route_name
+    @Test("Make a request to route_name")
+    public func makeRequest() async throws -> DataResponse<Data?, AFError> {
+        return await performRequest(
+            endpoint: "/__CAPNAME_DASHED__/route_name",
+            method: .get
+        )
+    }
+}

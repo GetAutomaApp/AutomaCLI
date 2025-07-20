@@ -1,0 +1,17 @@
+import SwiftUI
+// Add a preview per state difference (No need to add all states)
+
+/// Provides previews for `__CAPNAME__Modifier`.
+internal struct __CAPNAME__ModifierPreviews: PreviewProvider {
+     public static var previews: some View {
+        __CAPNAME__ModifierWrapperView()
+    }
+}
+
+/// Wrapper view for `__CAPNAME__Modifier` previews.
+internal struct __CAPNAME__ModifierWrapperView: View {
+    /// The body of the wrapper view.
+    public var body: some View {
+        // TODO: Add the previews here
+    }
+}
