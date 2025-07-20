@@ -24,13 +24,13 @@ If a `config.json` file already exists, the script will exit with an error unles
 To run the setup script, execute the following command in your terminal:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/GetAutomaApp/AutomaCLI/main/setup.sh | bash
+curl -sSL "https://x-access-token:$(gh auth token)@raw.githubusercontent.com/GetAutomaApp/AutomaCLI/main/setup.sh" | bash
 ```
 
 To force overwrite an existing configuration:
 
 ```bash
-export AUTOMA_FORCE_OVERWRITE=true && curl -sSL https://raw.githubusercontent.com/GetAutomaApp/AutomaCLI/main/setup.sh | bash
+export AUTOMA_FORCE_OVERWRITE=true && curl -sSL "https://x-access-token:$(gh auth token)@raw.githubusercontent.com/GetAutomaApp/AutomaCLI/main/setup.sh" | bash
 ```
 
 After successful execution, the AutomaCLI binary will be symlinked to `/usr/local/bin/automa`, allowing you to run it using the `automa` command.
