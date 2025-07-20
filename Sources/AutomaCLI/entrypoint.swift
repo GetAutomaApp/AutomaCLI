@@ -13,7 +13,7 @@ struct AutomaCLI {
         autoUpdate()
 
         var commands = Commands(enableAutocomplete: true)
-        commands.use(GenerateCommand(), as: "generate", isDefault: false)
+        commands.use(GenerateGroup(), as: "generate", isDefault: false)
 
         do {
             let group = commands.group(help: "The AUTOMA CLI tool")

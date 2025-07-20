@@ -12,6 +12,30 @@ struct GenerateGroup: CommandGroup {
     ]
 
     let help = "Generates code templates."
+
+    func run(using context: inout CommandContext) throws {
+        if let command = try self.commmand(using: &context) {
+            try command.run(using: &context)
+        } else if let `default` = self.defaultCommand {
+            return try `default`.run(using: &context)
+        } else {
+            try self.outputHelp(using: &context)
+            throw CommandError.missingCommand
+        }
+    }
+
+    private func commmand(using context: inout CommandContext) throws -> AnyCommand? {
+        if let name = context.input.arguments.first {
+            context.input.arguments.removeFirst()
+            guard let command = self.commands[name] else {
+                throw CommandError.unknownCommand(name, available: Array(self.commands.keys))
+            }
+            context.input.executablePath.append(name)
+            return command
+        } else {
+            return nil
+        }
+    }
 }
 
 struct GenerateCommand: Command {
