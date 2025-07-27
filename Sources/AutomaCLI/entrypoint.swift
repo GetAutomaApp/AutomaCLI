@@ -8,12 +8,17 @@ import Logging
 struct AutomaCLI {
     static func main() {
         let console = Terminal()
-        let input = CommandInput(arguments: ProcessInfo.processInfo.arguments)
+        var input = CommandInput(arguments: ProcessInfo.processInfo.arguments)
 
-        autoUpdate()
+        if !input.arguments.contains("--no-update") {
+            autoUpdate()
+        } else {
+            input.arguments.removeAll { $0 == "--no-update" }
+        }
 
         var commands = Commands(enableAutocomplete: true)
         commands.use(GenerateGroup(), as: "generate", isDefault: false)
+        commands.use(InfraCommand(), as: "infra", isDefault: false)
 
         do {
             let group = commands.group(help: "The AUTOMA CLI tool")

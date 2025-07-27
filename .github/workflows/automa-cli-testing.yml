@@ -21,4 +21,4 @@ jobs:
           compose: "false"
           working-directory: "."
     env:
-      FLY_METRICS_TOKEN: ${{ secrets.FLY_METRICS_TOKEN }}
+        FLY_METRICS_TOKEN: ${{ secrets.FLY_METRICS_TOKEN }}
