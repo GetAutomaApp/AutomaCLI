@@ -1,0 +1,24 @@
+name: Run `AutomaCLI` tests
+
+on:
+  pull_request:
+    paths:
+      - "**/*.swift"
+
+jobs:
+  run:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: "6.1"
+
+      - name: Run SwiftTesting
+        uses: GetAutomaApp/opensource-actions/swifttesting@main
+        with:
+          compose: "false"
+          working-directory: "."
+    env:
+      FLY_METRICS_TOKEN: ${{ secrets.FLY_METRICS_TOKEN }}
