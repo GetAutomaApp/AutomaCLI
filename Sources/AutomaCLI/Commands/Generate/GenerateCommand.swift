@@ -275,7 +275,7 @@ struct GenerateCommand: Command {
                 FileType(name: "ui-component", configurations: [
                     FileConfig(
                         fromDirectory: "ui-component/",
-                        toDirectory: "AutomaUIKit/Sources/AutomaUIKit/Components/",
+                        toDirectory: "App/AutomaUIKit/Sources/AutomaUIKit/Components/",
                         nestToDirectory: "__CAPNAME__Component/",
                         templates: [
                             "__CAPNAME__Component.swift.template",
@@ -287,7 +287,7 @@ struct GenerateCommand: Command {
                 FileType(name: "ui-modifier", configurations: [
                     FileConfig(
                         fromDirectory: "ui-modifier/",
-                        toDirectory: "AutomaUIKit/Sources/AutomaUIKit/Core/Modifiers/",
+                        toDirectory: "App/AutomaUIKit/Sources/AutomaUIKit/Core/Modifiers/",
                         nestToDirectory: "__CAPNAME__Modifier/",
                         templates: [
                             "__CAPNAME__Modifier.swift.template",
@@ -300,7 +300,7 @@ struct GenerateCommand: Command {
                     configurations: [
                         FileConfig(
                             fromDirectory: "backend-controller/",
-                            toDirectory: "Sources/App/Controllers/",
+                            toDirectory: "Backend/Sources/App/Controllers/",
                             nestToDirectory: "__CAPNAME__Controller/",
                             templates: [
                                 "__CAPNAME__Controller.swift.template",
@@ -308,7 +308,7 @@ struct GenerateCommand: Command {
                         ),
                         FileConfig(
                             fromDirectory: "controller-interactor/",
-                            toDirectory: "AutomaAppShared/Sources/AutomaAppShared/Interactors/",
+                            toDirectory: "App/AutomaAppShared/Sources/AutomaAppShared/Interactors/",
                             nestToDirectory: "",
                             templates: [
                                 "__CAPNAME__ControllerInteractor.swift.template",
@@ -321,7 +321,7 @@ struct GenerateCommand: Command {
                     configurations: [
                         FileConfig(
                             fromDirectory: "model/",
-                            toDirectory: "./Sources/App/Models/",
+                            toDirectory: "Backend/Sources/App/Models/",
                             nestToDirectory: "",
                             templates: [
                                 "__CAPNAME__Model.swift.template",
@@ -329,7 +329,7 @@ struct GenerateCommand: Command {
                         ),
                         FileConfig(
                             fromDirectory: "model/",
-                            toDirectory: "DataTypes/Sources/DataTypes/",
+                            toDirectory: "Backend/DataTypes/Sources/DataTypes/",
                             nestToDirectory: "",
                             templates: [
                                 "__CAPNAME__DTO.swift.template",
@@ -337,7 +337,7 @@ struct GenerateCommand: Command {
                         ),
                         FileConfig(
                             fromDirectory: "migration/",
-                            toDirectory: "./Sources/App/Migrations/",
+                            toDirectory: "Backend/Sources/App/Migrations/",
                             nestToDirectory: "",
                             templates: [
                                 "__CAPNAME__Migration.swift.template",
@@ -350,7 +350,7 @@ struct GenerateCommand: Command {
                     configurations: [
                         FileConfig(
                             fromDirectory: "dto/",
-                            toDirectory: "DataTypes/Sources/DataTypes/",
+                            toDirectory: "Backend/DataTypes/Sources/DataTypes/",
                             nestToDirectory: "",
                             templates: [
                                 "__CAPNAME__DTO.swift.template",
@@ -363,7 +363,7 @@ struct GenerateCommand: Command {
                     configurations: [
                         FileConfig(
                             fromDirectory: "migration/",
-                            toDirectory: "./Sources/App/Migrations/",
+                            toDirectory: "Backend/Sources/App/Migrations/",
                             nestToDirectory: "",
                             templates: [
                                 "__CAPNAME__Migration.swift.template",
@@ -376,7 +376,7 @@ struct GenerateCommand: Command {
                     configurations: [
                         FileConfig(
                             fromDirectory: "backend-service/",
-                            toDirectory: "Sources/App/Services/",
+                            toDirectory: "Backend/Sources/App/Services/",
                             nestToDirectory: "__CAPNAME__Service/",
                             templates: [
                                 "__CAPNAME__Service.swift.template",
@@ -389,7 +389,7 @@ struct GenerateCommand: Command {
                     configurations: [
                         FileConfig(
                             fromDirectory: "controller-interactor/",
-                            toDirectory: "AutomaAppShared/Sources/AutomaAppShared/Interactors/",
+                            toDirectory: "App/AutomaAppShared/Sources/AutomaAppShared/Interactors/",
                             nestToDirectory: "",
                             templates: [
                                 "__CAPNAME__ControllerInteractor.swift.template",
@@ -402,7 +402,7 @@ struct GenerateCommand: Command {
                     configurations: [
                         FileConfig(
                             fromDirectory: "backend-async-job/",
-                            toDirectory: "Sources/App/Procs/Jobs/",
+                            toDirectory: "Backend/Sources/App/Procs/Jobs/",
                             nestToDirectory: "__CAPNAME__AsyncJob/",
                             templates: [
                                 "__CAPNAME__AsyncJob.swift.template",
@@ -415,7 +415,7 @@ struct GenerateCommand: Command {
                     configurations: [
                         FileConfig(
                             fromDirectory: "command/",
-                            toDirectory: "Sources/App/Commands/",
+                            toDirectory: "Backend/Sources/App/Commands/",
                             nestToDirectory: "",
                             templates: [
                                 "__CAPNAME_LOWER__.swift.template",
@@ -428,7 +428,7 @@ struct GenerateCommand: Command {
                     configurations: [
                         FileConfig(
                             fromDirectory: "screen/",
-                            toDirectory: "AutomaAppShared/Sources/AutomaAppShared/Screens/",
+                            toDirectory: "App/AutomaAppShared/Sources/AutomaAppShared/Screens/",
                             nestToDirectory: "",
                             templates: [
                                 "__CAPNAME__Screen.swift.template",
@@ -441,15 +441,13 @@ struct GenerateCommand: Command {
     }
 }
 
-// MARK: - Example Subcommand: generate fly
-
 struct GenerateFly: Command {
     struct Signature: CommandSignature {
         @Argument(name: "name", help: "Name of the fly component.")
         var name: String
     }
 
-    let help = "Generates a Fly.swift file."
+    let help = "Generates a fly.toml config file"
 
     func run(using context: CommandContext, signature: Signature) throws {}
 }
