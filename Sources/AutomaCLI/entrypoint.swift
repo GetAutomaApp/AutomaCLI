@@ -19,6 +19,7 @@ struct AutomaCLI {
         var commands = Commands(enableAutocomplete: true)
         commands.use(GenerateGroup(), as: "generate", isDefault: false)
         commands.use(InfraCommand(), as: "infra", isDefault: false)
+        commands.use(SetupCommand(), as: "setup", isDefault: false)
 
         do {
             let group = commands.group(help: "The AUTOMA CLI tool")

@@ -443,11 +443,57 @@ struct GenerateCommand: Command {
 
 struct GenerateFly: Command {
     struct Signature: CommandSignature {
-        @Argument(name: "name", help: "Name of the fly component.")
-        var name: String
+        @Argument(name: "environment", help: "The environment to generate a config for.")
+        var environment: String
     }
 
     let help = "Generates a fly.toml config file"
 
-    func run(using context: CommandContext, signature: Signature) throws {}
+    func run(using context: CommandContext, signature: Signature) throws {
+        let environment = signature.environment
+        let config = try ConfigHelper.getAutomaConfig()
+
+        // Validate the environment argument
+        guard config.fly.environments.contains(environment) else {
+            throw Abort(.notFound, reason: "Invalid environment: \(environment)")
+        }
+
+        let configPath = "\(config.fly.configFilesRoot)/\(environment).toml"
+
+        // Check if the config file exists
+        guard FileManager.default.fileExists(atPath: configPath) else {
+            throw Abort(.notFound, reason: "Config file not found: \(configPath)")
+        }
+
+        // Read the content of the config file
+        var content = try String(contentsOfFile: configPath, encoding: .utf8)
+
+        // Retrieve the Fly metrics token from the environment
+        guard
+            let metricsToken = Environment.get("FLY_METRICS_TOKEN")
+        else {
+            throw Abort(.notFound, reason: "FLY_METRICS_TOKEN not found in environment")
+        }
+
+        // Replace placeholders in the config content
+        content = content
+            .replacingOccurrences(
+                of: "__FLY_ENVIRONMENT__",
+                with: environment
+            )
+            .replacingOccurrences(
+                of: "__FLY_METRICS_TOKEN__",
+                with: metricsToken
+            )
+
+        // Generate a new file path for the modified config
+        let newFileUUID = UUID().uuidString
+        let newFilePath = "/tmp/\(newFileUUID)-fly.toml"
+
+        // Write the modified content to the new file
+        try content.write(to: URL(fileURLWithPath: newFilePath), atomically: true, encoding: .utf8)
+
+        // Print the path of the new config file
+        print("\(newFilePath)")
+    }
 }
