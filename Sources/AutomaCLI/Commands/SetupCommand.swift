@@ -20,8 +20,14 @@ struct SetupCommand: Command {
         if FileManager.default.fileExists(atPath: configPath) {
             context.console.print("automa.config.json already exists.")
         } else {
-            let defaultConfig = "{}"
-            try defaultConfig.write(toFile: configPath, atomically: true, encoding: .utf8)
+            let defaultConfig = AutomaConfig(
+                fly: FlyConfig(configFilesRoot: "fly", environments: ["production", "sandbox", "staging"]),
+                actionsSecrets: ActionsSecretsConfig(ownerRepo: "")
+            )
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            let data = try encoder.encode(defaultConfig)
+            try data.write(to: URL(fileURLWithPath: configPath))
             context.console.print("Created empty automa.config.json.")
         }
     }

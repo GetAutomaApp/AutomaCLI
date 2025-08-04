@@ -67,18 +67,20 @@ struct SetActionsSecretsCommand: Command {
             return
         }
 
-        // 3. Get Owner and Repo from user
-        let owner = context.console.ask("Enter the repository owner (e.g., 'your-github-username'):")
-        let repo = context.console.ask("Enter the repository name (e.g., 'your-repo-name'):")
+        // 3. Get Owner and Repo from config
+        let config = try ConfigHelper.getAutomaConfig()
+        let ownerRepo = config.actionsSecrets.ownerRepo
 
-        if owner.isEmpty || repo.isEmpty {
-            context.console.error("Error: Owner and repository name cannot be empty.")
+        if ownerRepo.isEmpty {
+            context.console.error("Error: ownerRepo is not set in automa.config.json.")
+            context.console.print("Please edit the config file and set the value to 'owner/repo'.")
+            context.console.print("Set actionsSecrets.owner_repo value as <owner>/<repo> ")
             return
         }
 
         // 4. Set secrets using gh CLI
-        context.console.print("Setting secrets for \(owner)/\(repo)...")
-        let command = "gh secret set -f \"\(envFilePath)\" --repo \"\(owner)/\(repo)\""
+        context.console.print("Setting secrets for \(ownerRepo)...")
+        let command = "gh secret set -f \"\(envFilePath)\" --repo \"\(ownerRepo)\""
         do {
             let output = try Shell.run(command)
             if let stdout = output.stdout {

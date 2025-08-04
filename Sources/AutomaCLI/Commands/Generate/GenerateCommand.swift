@@ -21,7 +21,6 @@ struct GenerateGroup: CommandGroup {
             throw CommandError.missingCommand
         }
     }
-
     private func commmand(using context: inout CommandContext) throws -> AnyCommand? {
         if let name = context.input.arguments.first {
             context.input.arguments.removeFirst()
@@ -452,7 +451,7 @@ struct GenerateFly: Command {
         guard
             let metricsToken = ProcessInfo.processInfo.environment["FLY_METRICS_TOKEN"]
         else {
-            context.console.print("😭 FLY_METRICS_TOKEN not found in environment")
+            context.console.print("😭 FLY_METRICS_TOKEN not found in .env.cli")
             throw URLError(.badURL)
         }
 
