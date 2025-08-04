@@ -3,10 +3,13 @@
 import ConsoleKit
 import Foundation
 import Logging
+import SwiftDotenv
 
 @main
 struct AutomaCLI {
     static func main() {
+        try? Dotenv.configure(atPath: ".env.cli")
+
         let console = Terminal()
         var input = CommandInput(arguments: ProcessInfo.processInfo.arguments)
 

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Vapor
+import ConsoleKit
 
 struct SetupCommand: Command {
     struct Signature: CommandSignature {}

@@ -3,8 +3,6 @@
 import ConsoleKit
 import Foundation
 
-// MARK: - Generate Group (Entry Point)
-
 struct GenerateGroup: CommandGroup {
     let commands: [String: AnyCommand] = [
         "fly": GenerateFly(),
@@ -41,33 +39,27 @@ struct GenerateGroup: CommandGroup {
 struct GenerateCommand: Command {
     public init() {}
 
-    /// Provides help text for the command.
     public var help: String {
         "Generates an app component based on the given name."
     }
 
-    /// Signature for the command, defining the arguments and options.
     public struct Signature: CommandSignature {
         public init() {}
-        /// The component to generate.
         @Argument(
             name: "name",
             help: "The component to generate."
         )
         public var component: String
 
-        /// The name of the component to generate.
         @Argument(name: "filename", help: "The name of the component to generate.")
         public var filename: String
 
-        /// The directory to nest the component into.
         @Option(
             name: "nestedDir",
             help: "The directory you want to nest the component into (added to the default path)."
         )
         public var nestedDir: String?
 
-        /// Flag to indicate whether to copy files to the destination directory.
         @Flag(name: "copy", help: "Copy files to the destination directory.")
         public var copy: Bool
     }
@@ -151,7 +143,6 @@ struct GenerateCommand: Command {
         }
     }
 
-    /// Moves and renames a file from the source to the destination.
     private func moveAndRenameFile(
         source: String,
         destination: String,
@@ -190,7 +181,6 @@ struct GenerateCommand: Command {
         return "\(destination)\n\(content)"
     }
 
-    /// Renames placeholders in the text with the component name.
     private func rename(text: String, componentName: String) -> String {
         let words = pascalToWordsArray(componentName)
         return text
@@ -203,7 +193,6 @@ struct GenerateCommand: Command {
             .replacingOccurrences(of: "__TIMESTAMP__", with: "\(Int(Date().timeIntervalSince1970))")
     }
 
-    /// Converts a PascalCase string to an array of words.
     private func pascalToWordsArray(_ pascal: String) -> [String] {
         let pattern = "([A-Z])"
         do {
@@ -221,7 +210,6 @@ struct GenerateCommand: Command {
         }
     }
 
-    /// Converts an array of words to a dashed string.
     private func arrayToDashed(_ array: [String], capitalized: Bool = false) -> String {
         let dashedString = array.joined(separator: "-")
         if capitalized, let firstCharacter = dashedString.first {
@@ -230,7 +218,6 @@ struct GenerateCommand: Command {
         return dashedString
     }
 
-    /// Converts an array of words to a Haskell-style string.
     private func arrayToHaskell(_ array: [String]) -> String {
         guard !array.isEmpty else { return "" }
         return array
@@ -245,23 +232,19 @@ struct GenerateCommand: Command {
             .joined(separator: "")
     }
 
-    /// Converts an array of words to a space-delimited string.
     private func arrayToSpaceDelimited(_ array: [String]) -> String {
         array.joined(separator: " ")
     }
 
-    /// Converts an array of words to a PascalCase string.
     private func arrayToPascalCase(_ array: [String]) -> String {
         array.map { $0.capitalized }.joined()
     }
 
-    /// Represents a file type with its configurations for generating components.
     public struct FileType: Sendable {
         public let name: String
         public let configurations: [FileConfig]
     }
 
-    /// Represents a configuration for a file type.
     public struct FileConfig: Sendable {
         public let fromDirectory: String
         public let toDirectory: String
@@ -443,39 +426,36 @@ struct GenerateCommand: Command {
 
 struct GenerateFly: Command {
     struct Signature: CommandSignature {
-        @Argument(name: "environment", help: "The environment to generate a config for.")
+        @Argument(name: "template", help: "The name of the template file (without .toml extension).")
+        var template: String
+
+        @Argument(name: "environment", help: "The environment to use for placeholder replacement.")
         var environment: String
     }
 
-    let help = "Generates a fly.toml config file"
+    let help = "Generates a fly.toml config file from a template."
 
     func run(using context: CommandContext, signature: Signature) throws {
+        let template = signature.template
         let environment = signature.environment
         let config = try ConfigHelper.getAutomaConfig()
 
-        // Validate the environment argument
-        guard config.fly.environments.contains(environment) else {
-            throw Abort(.notFound, reason: "Invalid environment: \(environment)")
-        }
+        let configPath = "\(config.fly.configFilesRoot)/\(template).toml"
 
-        let configPath = "\(config.fly.configFilesRoot)/\(environment).toml"
-
-        // Check if the config file exists
         guard FileManager.default.fileExists(atPath: configPath) else {
-            throw Abort(.notFound, reason: "Config file not found: \(configPath)")
+            context.console.print("😭 can't find config directory")
+            throw URLError(.badURL)
         }
 
-        // Read the content of the config file
         var content = try String(contentsOfFile: configPath, encoding: .utf8)
 
-        // Retrieve the Fly metrics token from the environment
         guard
-            let metricsToken = Environment.get("FLY_METRICS_TOKEN")
+            let metricsToken = ProcessInfo.processInfo.environment["FLY_METRICS_TOKEN"]
         else {
-            throw Abort(.notFound, reason: "FLY_METRICS_TOKEN not found in environment")
+            context.console.print("😭 FLY_METRICS_TOKEN not found in environment")
+            throw URLError(.badURL)
         }
 
-        // Replace placeholders in the config content
         content = content
             .replacingOccurrences(
                 of: "__FLY_ENVIRONMENT__",
@@ -486,14 +466,11 @@ struct GenerateFly: Command {
                 with: metricsToken
             )
 
-        // Generate a new file path for the modified config
         let newFileUUID = UUID().uuidString
         let newFilePath = "/tmp/\(newFileUUID)-fly.toml"
 
-        // Write the modified content to the new file
         try content.write(to: URL(fileURLWithPath: newFilePath), atomically: true, encoding: .utf8)
 
-        // Print the path of the new config file
         print("\(newFilePath)")
     }
 }
