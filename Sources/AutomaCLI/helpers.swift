@@ -6,7 +6,13 @@
 import Foundation
 
 internal struct Config: Codable {
-    internal let repoPath: String
+    internal var repoPath: String
+    internal var grafana: [String: GrafanaConfig]?
+}
+
+internal struct GrafanaConfig: Codable {
+    internal let url: String
+    internal let token: String
 }
 
 internal enum ConfigError: Error, CustomStringConvertible {
@@ -37,6 +43,20 @@ internal func loadConfig() throws -> Config {
     do {
         let data = try Data(contentsOf: configFile)
         return try JSONDecoder().decode(Config.self, from: data)
+    } catch {
+        throw ConfigError.decodingError(error)
+    }
+}
+
+internal func saveConfig(_ config: Config) throws {
+    let configDir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".config/automacli")
+    let configFile = configDir.appendingPathComponent("config.json")
+
+    do {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        let data = try encoder.encode(config)
+        try data.write(to: configFile, options: .atomic)
     } catch {
         throw ConfigError.decodingError(error)
     }

@@ -10,6 +10,18 @@ internal struct AutomaConfig: Codable {
     let fly: FlyConfig
     /// GH Actions add secrets config
     let actionsSecrets: ActionsSecretsConfig
+    /// Grafana project configuration
+    let grafana: GrafanaProjectConfig
+}
+
+internal struct GrafanaProjectConfig: Codable {
+    /// The current environment for Grafana
+    let currentEnvironment: String
+
+    /// coding keys
+    enum CodingKeys: String, CodingKey {
+        case currentEnvironment = "current_environment"
+    }
 }
 
 internal struct FlyConfig: Codable {

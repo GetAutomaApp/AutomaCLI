@@ -28,6 +28,7 @@ internal struct AutomaCLI {
         commands.use(GenerateGroup(), as: "generate", isDefault: false)
         commands.use(InfraCommand(), as: "infra", isDefault: false)
         commands.use(SetupCommand(), as: "setup", isDefault: false)
+        commands.use(GrafanaCommand(), as: "grafana", isDefault: false)
 
         do {
             let group = commands.group(help: "The AUTOMA CLI tool")

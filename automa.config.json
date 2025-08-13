@@ -9,5 +9,8 @@
       "staging"
     ],
     "config_files_root" : "fly"
+  },
+  "grafana": {
+    "current_environment": "staging"
   }
 }
