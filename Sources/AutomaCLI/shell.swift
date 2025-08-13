@@ -1,4 +1,4 @@
-// shell.swift
+// Shell.swift
 // Copyright (c) 2025 GetAutomaApp
 // All source code and related assets are the property of GetAutomaApp.
 // All rights reserved.
@@ -12,15 +12,15 @@ internal enum CLIError: Error {
 /// The output information of a shell command.
 internal struct ShellOutput {
     /// The standard output of the command.
-    public let stdout: String?
+    internal let stdout: String?
     /// The standard error output of the command.
-    public let stderr: String?
+    internal let stderr: String?
     /// The exit status of the command.
-    public let exitStatus: Int
+    internal let exitStatus: Int
     /// A flag indicating whether the command resulted in an error.
-    public let isError: Bool
+    internal let isError: Bool
     /// The command that was executed.
-    public let command: String
+    internal let command: String
 }
 
 /// Enum representing different operating systems.
@@ -33,13 +33,13 @@ internal enum OperatingSystem {
 /// A simple shell wrapper in Swift, to execute shell commands.
 internal struct Shell {
     /// The operating system on which the shell is running.
-    public let operatingSystem: OperatingSystem
+    internal let operatingSystem: OperatingSystem
     /// The command used to copy text to the clipboard.
-    public let copyCommand: String
+    internal let copyCommand: String
 
     /// Initializes a new instance of `Shell`.
     /// - Throws: An error if the operating system cannot be determined.
-    public init() throws {
+    init() throws {
         operatingSystem = try Self.getOperatingSystem()
         copyCommand = Self.getCopyCommand(os: operatingSystem)
     }
@@ -48,7 +48,7 @@ internal struct Shell {
     /// - Parameter command: The command to execute.
     /// - Returns: The output of the command.
     @discardableResult
-    public static func run(_ command: String) throws -> ShellOutput {
+    static func run(_ command: String) throws -> ShellOutput {
         let task = Process()
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()

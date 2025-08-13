@@ -1,0 +1,13 @@
+{
+  "actionsSecrets" : {
+    "owner_repo" : ""
+  },
+  "fly" : {
+    "environments" : [
+      "production",
+      "sandbox",
+      "staging"
+    ],
+    "config_files_root" : "fly"
+  }
+}

@@ -1,9 +1,14 @@
+// InfraCommand.swift
+// Copyright (c) 2025 GetAutomaApp
+// All source code and related assets are the property of GetAutomaApp.
+// All rights reserved.
+
 import ConsoleKit
 import Foundation
 
 // MARK: - Infra Group (Entry Point)
 
-struct InfraCommand: CommandGroup {
+internal struct InfraCommand: CommandGroup {
     let commands: [String: AnyCommand] = [
         "set-actions-secrets": SetActionsSecretsCommand(),
     ]
@@ -11,12 +16,13 @@ struct InfraCommand: CommandGroup {
     let help = "Infrastructure related commands."
 
     func run(using context: inout CommandContext) throws {
-        if let command = try self.commmand(using: &context) {
+        if let command = try commmand(using: &context) {
             try command.run(using: &context)
-        } else if let `default` = self.defaultCommand {
-            return try `default`.run(using: &context)
+        } else if let `default` = defaultCommand {
+            try `default`.run(using: &context)
+            return
         } else {
-            try self.outputHelp(using: &context)
+            try outputHelp(using: &context)
             throw CommandError.missingCommand
         }
     }
@@ -24,8 +30,8 @@ struct InfraCommand: CommandGroup {
     private func commmand(using context: inout CommandContext) throws -> AnyCommand? {
         if let name = context.input.arguments.first {
             context.input.arguments.removeFirst()
-            guard let command = self.commands[name] else {
-                throw CommandError.unknownCommand(name, available: Array(self.commands.keys))
+            guard let command = commands[name] else {
+                throw CommandError.unknownCommand(name, available: Array(commands.keys))
             }
             context.input.executablePath.append(name)
             return command
@@ -35,21 +41,21 @@ struct InfraCommand: CommandGroup {
     }
 }
 
-struct SetActionsSecretsCommand: Command {
-    public init() {}
+internal struct SetActionsSecretsCommand: Command {
+    init() {}
 
-    public var help: String {
+    var help: String {
         "Sets GitHub Actions secrets from an environment file."
     }
 
-    public struct Signature: CommandSignature {
-        public init() {}
+    struct Signature: CommandSignature {
+        init() {}
 
         @Argument(name: "env-file", help: "Path to the .env file containing secrets.")
-        public var envFile: String
+        var envFile: String
     }
 
-    public func run(using context: CommandContext, signature: Signature) throws {
+    func run(using context: CommandContext, signature: Signature) throws {
         // 1. Check for gh CLI
         do {
             _ = try Shell.run("command -v gh")
@@ -93,10 +99,10 @@ struct SetActionsSecretsCommand: Command {
         } catch {
             context.console.error("Failed to set secrets.")
             context.console.error("Error: \(error)")
-            context.console.print("Please ensure you are authenticated with 'gh auth login' and have the correct permissions for the repository.")
+            context.console.print("Please ensure you are authenticated with 'gh auth login'")
+            context.console.print("and have the correct permissions for the repository.")
             throw error
         }
-
 
         // 5. Generate and print the env block
         context.console.print("\nGenerating env block for GitHub Actions workflow...\n")

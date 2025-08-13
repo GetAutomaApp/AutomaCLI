@@ -1,9 +1,12 @@
-
+// GenerateCommand.swift
+// Copyright (c) 2025 GetAutomaApp
+// All source code and related assets are the property of GetAutomaApp.
+// All rights reserved.
 
 import ConsoleKit
 import Foundation
 
-struct GenerateGroup: CommandGroup {
+internal struct GenerateGroup: CommandGroup {
     let commands: [String: AnyCommand] = [
         "fly": GenerateFly(),
         "generate": GenerateCommand(),
@@ -12,20 +15,22 @@ struct GenerateGroup: CommandGroup {
     let help = "Generates code templates."
 
     func run(using context: inout CommandContext) throws {
-        if let command = try self.commmand(using: &context) {
+        if let command = try commmand(using: &context) {
             try command.run(using: &context)
-        } else if let `default` = self.defaultCommand {
-            return try `default`.run(using: &context)
+        } else if let `default` = defaultCommand {
+            try `default`.run(using: &context)
+            return
         } else {
-            try self.outputHelp(using: &context)
+            try outputHelp(using: &context)
             throw CommandError.missingCommand
         }
     }
+
     private func commmand(using context: inout CommandContext) throws -> AnyCommand? {
         if let name = context.input.arguments.first {
             context.input.arguments.removeFirst()
-            guard let command = self.commands[name] else {
-                throw CommandError.unknownCommand(name, available: Array(self.commands.keys))
+            guard let command = commands[name] else {
+                throw CommandError.unknownCommand(name, available: Array(commands.keys))
             }
             context.input.executablePath.append(name)
             return command
@@ -35,32 +40,32 @@ struct GenerateGroup: CommandGroup {
     }
 }
 
-struct GenerateCommand: Command {
-    public init() {}
+internal struct GenerateCommand: Command {
+    init() {}
 
-    public var help: String {
+    var help: String {
         "Generates an app component based on the given name."
     }
 
-    public struct Signature: CommandSignature {
-        public init() {}
+    struct Signature: CommandSignature {
+        init() {}
         @Argument(
             name: "name",
             help: "The component to generate."
         )
-        public var component: String
+        var component: String
 
         @Argument(name: "filename", help: "The name of the component to generate.")
-        public var filename: String
+        var filename: String
 
         @Option(
             name: "nestedDir",
             help: "The directory you want to nest the component into (added to the default path)."
         )
-        public var nestedDir: String?
+        var nestedDir: String?
 
         @Flag(name: "copy", help: "Copy files to the destination directory.")
-        public var copy: Bool
+        var copy: Bool
     }
 
     /// Executes the command with the given context and signature.
@@ -68,7 +73,7 @@ struct GenerateCommand: Command {
     ///   - context: The context in which the command is executed.
     ///   - signature: The command's signature containing arguments.
     /// - Throws: Any errors that occur during command execution.
-    public func run(using context: CommandContext, signature: Signature) throws {
+    func run(using context: CommandContext, signature: Signature) throws {
         let config = try loadConfig()
         let basePath = "\(config.repoPath)/generators/"
         let fileTypes = FileTypeHelper.getFileTypes()
@@ -84,7 +89,10 @@ struct GenerateCommand: Command {
 
             for fileConfig in fileType.configurations {
                 let fromDirectory = URL(fileURLWithPath: "\(basePath)\(fileConfig.fromDirectory)").standardized.path
-                let toDirectory = URL(fileURLWithPath: fileConfig.toDirectory, relativeTo: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)).standardized.path
+                let toDirectory = URL(
+                    fileURLWithPath: fileConfig.toDirectory,
+                    relativeTo: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                ).standardized.path
                 let nestedDir = signature.nestedDir ?? ""
 
                 let toNestedDir = URL(fileURLWithPath: "\(toDirectory)/\(arrayToPascalCase([nestedDir]))/")
@@ -132,7 +140,8 @@ struct GenerateCommand: Command {
                     )
                 }
 
-                context.console.print("✅ Successfully created a \(fileType.name) called '\(componentName)' in '\(toNestedDir)'.")
+                context.console
+                    .print("✅ Successfully created a \(fileType.name) called '\(componentName)' in '\(toNestedDir)'.")
             }
         }
 
@@ -236,22 +245,23 @@ struct GenerateCommand: Command {
     }
 
     private func arrayToPascalCase(_ array: [String]) -> String {
-        array.map { $0.capitalized }.joined()
+        array.map(\.capitalized).joined()
     }
 
-    public struct FileType: Sendable {
-        public let name: String
-        public let configurations: [FileConfig]
+    struct FileType: Sendable {
+        let name: String
+        let configurations: [FileConfig]
     }
 
-    public struct FileConfig: Sendable {
-        public let fromDirectory: String
-        public let toDirectory: String
-        public let nestToDirectory: String
-        public let templates: [String]
+    struct FileConfig: Sendable {
+        let fromDirectory: String
+        let toDirectory: String
+        let nestToDirectory: String
+        let templates: [String]
     }
 
     private enum FileTypeHelper {
+        // swiftlint:disable:next function_body_length
         public static func getFileTypes() -> [FileType] {
             [
                 FileType(name: "ui-component", configurations: [
@@ -423,7 +433,7 @@ struct GenerateCommand: Command {
     }
 }
 
-struct GenerateFly: Command {
+internal struct GenerateFly: Command {
     struct Signature: CommandSignature {
         @Argument(name: "template", help: "The name of the template file (without .toml extension).")
         var template: String

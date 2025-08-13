@@ -1,20 +1,24 @@
+// helpers.swift
+// Copyright (c) 2025 GetAutomaApp
+// All source code and related assets are the property of GetAutomaApp.
+// All rights reserved.
 
 import Foundation
 
-struct Config: Codable {
-    let repoPath: String
+internal struct Config: Codable {
+    internal let repoPath: String
 }
 
-enum ConfigError: Error, CustomStringConvertible {
-    case fileNotFound(path: String)
+internal enum ConfigError: Error, CustomStringConvertible {
     case decodingError(Error)
+    case fileNotFound(path: String)
     case invalidPath
 
-    var description: String {
+    internal var description: String {
         switch self {
-        case .fileNotFound(let path):
+        case let .fileNotFound(path):
             return "Config file not found at: \(path)"
-        case .decodingError(let error):
+        case let .decodingError(error):
             return "Error decoding config file: \(error.localizedDescription)"
         case .invalidPath:
             return "Invalid configuration path."
@@ -22,7 +26,7 @@ enum ConfigError: Error, CustomStringConvertible {
     }
 }
 
-func loadConfig() throws -> Config {
+internal func loadConfig() throws -> Config {
     let configDir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".config/automacli")
     let configFile = configDir.appendingPathComponent("config.json")
 
@@ -32,8 +36,7 @@ func loadConfig() throws -> Config {
 
     do {
         let data = try Data(contentsOf: configFile)
-        let config = try JSONDecoder().decode(Config.self, from: data)
-        return config
+        return try JSONDecoder().decode(Config.self, from: data)
     } catch {
         throw ConfigError.decodingError(error)
     }
