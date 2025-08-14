@@ -11,13 +11,13 @@ internal struct GrafanaApplyCommand: Command {
     init() {}
 
     var help: String {
-        "Applies a Grafana dashboard, monitor, or alert configuration."
+        "Applies a Grafana dashboard or alert configuration."
     }
 
     struct Signature: CommandSignature {
         init() {}
 
-        @Option(name: "config-file", help: "Path to the YAML or JSON configuration file (e.g., my_dash.json, my_alert.json, my_monitor.json).")
+        @Option(name: "config-file", help: "Path to the YAML or JSON configuration file (e.g., my_dash.json, my_alert.json).")
         var configFile: String?
 
         @Flag(name: "all", help: "Apply all Grafana configuration files in the project recursively.")
@@ -50,7 +50,7 @@ internal struct GrafanaApplyCommand: Command {
                 let fullPath = (projectRoot as NSString).appendingPathComponent(element)
                 let fileName = (fullPath as NSString).lastPathComponent
 
-                if fileName.contains("_dash.") || fileName.contains("_alert.") || fileName.contains("_monitor.") {
+                if fileName.contains("_dash.") || fileName.contains("_alert.") {
                     filesToApply.append(fullPath)
                 }
             }
@@ -76,10 +76,8 @@ internal struct GrafanaApplyCommand: Command {
                 endpoint = "/api/dashboards/db"
             } else if fileName.contains("_alert.") {
                 endpoint = "/api/v1/provisioning/alert-rules"
-            } else if fileName.contains("_monitor.") {
-                endpoint = "/api/sm/checks"
             } else {
-                context.console.error("Skipping \(fileName): Invalid file name. Please use one of the following suffixes: _dash.ext, _alert.ext, _monitor.ext")
+                context.console.error("Skipping \(fileName): Invalid file name. Please use one of the following suffixes: _dash.ext, _alert.ext")
                 continue
             }
 
