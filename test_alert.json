@@ -1,0 +1,26 @@
+{
+  "labels" : {
+    "team" : "test"
+  },
+  "group": "test_alert",
+  "folderUID" : "ceuz1s5pulukge",
+  "execErrState" : "Alerting",
+  "data" : [
+    {
+      "refId" : "A",
+      "model" : {
+        "type" : "expression",
+        "expression" : "2 + 2 > 1"
+      },
+      "datasourceUid" : "__expr__"
+    }
+  ],
+  "uid" : "aeuz1w0irzg8we",
+  "condition" : "A",
+  "noDataState" : "OK",
+  "for" : "1m",
+  "title" : "My Minimal Test Alert V2",
+  "annotations" : {
+    "summary" : "Minimal test alert"
+  }
+}
