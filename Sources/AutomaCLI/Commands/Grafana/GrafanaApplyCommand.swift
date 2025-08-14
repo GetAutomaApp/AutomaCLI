@@ -1,7 +1,6 @@
 
 
-// GrafanaApplyCommand.swift
-// Copyright (c) 2025 GetAutomaApp
+// GrafanaApplyCommand.swift Copyright (c) 2025 GetAutomaApp
 // All source code and related assets are the property of GetAutomaApp.
 // All rights reserved.
 
@@ -200,12 +199,6 @@ internal struct GrafanaApplyCommand: Command {
                 alertJSON["folderUID"] = resolvedFolderUid
                 alertJSON["folder"] = nil // Remove the "folder" field as it's replaced by "folderUID"
 
-                // Check if rule group exists
-                if !(try checkRuleGroupExists(folderUID: resolvedFolderUid, ruleGroup: ruleGroup, context: context, grafanaConfig: grafanaConfig)) {
-                    context.console.error("Error: Rule group '\(ruleGroup)' does not exist in folder '\(folderIdentifier)'. Please create the rule group first.")
-                    continue
-                }
-
                 let endpoint = "/api/v1/provisioning/alert-rules"
                 let uid = alertJSON["uid"] as? String
                 
@@ -356,52 +349,6 @@ internal struct GrafanaApplyCommand: Command {
         }
 
         return folderUid
-    }
-
-    private func checkRuleGroupExists(folderUID: String, ruleGroup: String, context: CommandContext, grafanaConfig: GrafanaConfig) throws -> Bool {
-        let semaphore = DispatchSemaphore(value: 0)
-        var exists = false
-        var apiError: Error?
-
-        let allAlertRulesUrl = URL(string: "\(grafanaConfig.url)/api/v1/provisioning/alert-rules")!
-        var allAlertRulesRequest = URLRequest(url: allAlertRulesUrl)
-        allAlertRulesRequest.setValue("Bearer \(grafanaConfig.token)", forHTTPHeaderField: "Authorization")
-
-        let task = URLSession.shared.dataTask(with: allAlertRulesRequest) { data, response, error in
-            if let error = error {
-                apiError = error
-                semaphore.signal()
-                return
-            }
-
-            if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
-                if let data = data, let alertRules = try? JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
-                    for rule in alertRules {
-                        if let ruleFolderUID = rule["folderUID"] as? String,
-                           let ruleRuleGroup = rule["ruleGroup"] as? String,
-                           ruleFolderUID == folderUID && ruleRuleGroup == ruleGroup {
-                            exists = true
-                            break
-                        }
-                    }
-                }
-            } else {
-                if let data = data, let responseBody = String(data: data, encoding: .utf8) {
-                    apiError = CommandError.unknownCommand("API call failed: \(responseBody)", available: [])
-                } else {
-                    apiError = CommandError.unknownCommand("API call failed with status code \((response as? HTTPURLResponse)?.statusCode ?? 0)", available: [])
-                }
-            }
-            semaphore.signal()
-        }
-        task.resume()
-        semaphore.wait()
-
-        if let apiError = apiError {
-            throw apiError
-        }
-
-        return exists
     }
 }
 
