@@ -12,7 +12,7 @@ import SwiftDotenv
 
 @main
 internal struct AutomaCLI {
-    internal static func main() {
+    internal static func main() async {
         try? Dotenv.configure(atPath: ".env.cli")
 
         let console = Terminal()
@@ -24,15 +24,15 @@ internal struct AutomaCLI {
             input.arguments.removeAll { $0 == "--no-update" }
         }
 
-        var commands = Commands(enableAutocomplete: true)
+        var commands = AsyncCommands(enableAutocomplete: true)
         commands.use(GenerateGroup(), as: "generate", isDefault: false)
         commands.use(InfraCommand(), as: "infra", isDefault: false)
         commands.use(SetupCommand(), as: "setup", isDefault: false)
-        commands.use(GrafanaCommand(), as: "grafana", isDefault: false)
+        commands.use(GrafanaCommand(), as: "grafana")
 
         do {
             let group = commands.group(help: "The AUTOMA CLI tool")
-            try console.run(group, input: input)
+            try await console.run(group, input: input)
         } catch {
             console.error("\(error)")
         }

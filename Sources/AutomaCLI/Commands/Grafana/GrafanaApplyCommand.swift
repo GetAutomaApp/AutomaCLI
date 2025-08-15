@@ -1,30 +1,20 @@
-
-
-// GrafanaApplyCommand.swift Copyright (c) 2025 GetAutomaApp
-// All source code and related assets are the property of GetAutomaApp.
-// All rights reserved.
-
 import ConsoleKit
 import Foundation
+import Alamofire
+import AnyCodable
 
-internal struct GrafanaApplyCommand: Command {
-    init() {}
-
-    var help: String {
-        "Applies a Grafana dashboard or alert configuration."
-    }
+internal struct GrafanaApplyCommand: AsyncCommand {
+    var help: String { "Applies a Grafana dashboard or alert configuration." }
 
     struct Signature: CommandSignature {
-        init() {}
-
-        @Option(name: "config-file", help: "Path to the YAML or JSON configuration file (e.g., my_dash.json, my_alert.json).")
+        @Option(name: "config-file", help: "Path to the YAML or JSON configuration file.")
         var configFile: String?
 
-        @Flag(name: "all", help: "Apply all Grafana configuration files in the project recursively.")
+        @Flag(name: "all", help: "Apply all Grafana configuration files recursively.")
         var all: Bool
     }
 
-    func run(using context: CommandContext, signature: Signature) throws {
+    func run(using context: CommandContext, signature: Signature) async throws {
         let automaConfig = try ConfigHelper.getAutomaConfig()
         let environment = automaConfig.grafana.currentEnvironment
 
@@ -35,31 +25,7 @@ internal struct GrafanaApplyCommand: Command {
             throw CommandError.unknownCommand("", available: [])
         }
 
-        var filesToApply: [String] = []
-
-        if signature.all {
-            guard signature.configFile == nil else {
-                context.console.error("Cannot use --all flag with --config-file option.")
-                throw CommandError.unknownCommand("", available: [])
-            }
-
-            let projectRoot = FileManager.default.currentDirectoryPath
-            let enumerator = FileManager.default.enumerator(atPath: projectRoot)
-
-            while let element = enumerator?.nextObject() as? String {
-                let fullPath = (projectRoot as NSString).appendingPathComponent(element)
-                let fileName = (fullPath as NSString).lastPathComponent
-
-                if fileName.contains("_dash.") || fileName.contains("_alert.") {
-                    filesToApply.append(fullPath)
-                }
-            }
-        } else if let configFile = signature.configFile {
-            filesToApply.append(configFile)
-        } else {
-            context.console.error("Either --config-file option or --all flag must be provided.")
-            throw CommandError.unknownCommand("", available: [])
-        }
+        let filesToApply = try collectFiles(signature: signature)
 
         guard !filesToApply.isEmpty else {
             context.console.print("No Grafana configuration files found to apply.")
@@ -67,288 +33,193 @@ internal struct GrafanaApplyCommand: Command {
         }
 
         for filePath in filesToApply {
-            context.console.print("Applying Grafana configuration for \(environment) environment from \(filePath)...")
-
-            let fileName = URL(fileURLWithPath: filePath).lastPathComponent
-
-            var configFileContent: String
             do {
-                configFileContent = try String(contentsOfFile: filePath, encoding: .utf8)
+                try await processFile(
+                    filePath,
+                    environment: environment,
+                    grafanaConfig: grafanaConfig,
+                    context: context
+                )
             } catch {
-                context.console.error("Error reading config file \(fileName): \(error.localizedDescription)")
-                continue
-            }
-
-            if fileName.contains("_dash.") {
-                guard var dashboardJSON = try? JSONSerialization.jsonObject(with: configFileContent.data(using: .utf8)!, options: .mutableContainers) as? [String: Any] else {
-                    context.console.error("Could not parse dashboard JSON from \(fileName).")
-                    continue
-                }
-
-                var folderUidForPayload: String?
-                if let folderIdentifier = dashboardJSON["folder"] as? String {
-                    if let resolvedFolderUid = try resolveFolder(folderIdentifier: folderIdentifier, context: context, grafanaConfig: grafanaConfig) {
-                        dashboardJSON["folder"] = nil
-                        dashboardJSON["folderUid"] = resolvedFolderUid
-                        folderUidForPayload = resolvedFolderUid
-                        
-                        let updatedData = try JSONSerialization.data(withJSONObject: dashboardJSON, options: .prettyPrinted)
-                        try updatedData.write(to: URL(fileURLWithPath: filePath))
-                        configFileContent = String(data: updatedData, encoding: .utf8)!
-                    }
-                } else if let existingFolderUid = dashboardJSON["folderUid"] as? String {
-                    folderUidForPayload = existingFolderUid
-                }
-
-                let hasUid = dashboardJSON["uid"] as? String != nil
-
-                var payload: [String: Any?] = [
-                    "dashboard": dashboardJSON,
-                    "overwrite": true,
-                    "message": "Updated by AutomaCLI",
-                ]
-                if folderUidForPayload != nil {
-                    payload["folderUid"] = folderUidForPayload
-                }
-
-                let endpoint = "/api/dashboards/db"
-                let url = URL(string: "\(grafanaConfig.url)\(endpoint)")!
-                var request = URLRequest(url: url)
-                request.httpMethod = "POST"
-                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.setValue("Bearer \(grafanaConfig.token)", forHTTPHeaderField: "Authorization")
-                request.httpBody = try? JSONSerialization.data(withJSONObject: payload, options: [])
-                
-                let semaphore = DispatchSemaphore(value: 0)
-                var success = false
-
-                let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                    if let error = error {
-                        context.console.error("API call error for \(fileName): \(error.localizedDescription)")
-                        semaphore.signal()
-                        return
-                    }
-
-                    if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
-                        success = true
-                        if !hasUid, let data = data {
-                            do {
-                                if let responseJSON = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                                   let newUid = responseJSON["uid"] as? String {
-                                    
-                                    dashboardJSON["uid"] = newUid
-                                    if let newId = responseJSON["id"] as? Int {
-                                       dashboardJSON["id"] = newId
-                                    }
-                                    if let newVersion = responseJSON["version"] as? Int {
-                                       dashboardJSON["version"] = newVersion
-                                    }
-
-                                    let updatedData = try JSONSerialization.data(withJSONObject: dashboardJSON, options: .prettyPrinted)
-                                    try updatedData.write(to: URL(fileURLWithPath: filePath))
-                                    context.console.info("Updated \(fileName) with new dashboard uid: \(newUid)")
-                                }
-                            } catch {
-                                context.console.error("Failed to update \(fileName) with new uid: \(error.localizedDescription)")
-                            }
-                        }
-                    } else {
-                        if let data = data, let responseBody = String(data: data, encoding: .utf8) {
-                            context.console.error("API call failed for \(fileName) with response: \(responseBody)")
-                        } else {
-                            context.console.error("API call failed for \(fileName) with status code \((response as? HTTPURLResponse)?.statusCode ?? 0)")
-                        }
-                    }
-                    semaphore.signal()
-                }
-                task.resume()
-                semaphore.wait()
-
-                if success {
-                    if !hasUid {
-                        context.console.success("Successfully created new Grafana dashboard from \(fileName).")
-                    } else {
-                        context.console.success("Successfully updated Grafana dashboard from \(fileName).")
-                    }
-                } else {
-                    context.console.error("Failed to apply Grafana configuration for \(fileName).")
-                }
-
-            } else if fileName.contains("_alert.") {
-                guard var alertJSON = try? JSONSerialization.jsonObject(with: configFileContent.data(using: .utf8)!, options: .mutableContainers) as? [String: Any] else {
-                    context.console.error("Could not parse alert JSON from \(fileName).")
-                    continue
-                }
-
-                // Extract folderUID and ruleGroup
-                guard let folderIdentifier = alertJSON["folder"] as? String else {
-                    context.console.error("Error: Alert JSON from \(fileName) is missing 'folder' field.")
-                    continue
-                }
-                
-                guard let ruleGroup = alertJSON["ruleGroup"] as? String else {
-                    context.console.error("Error: Alert JSON from \(fileName) is missing 'ruleGroup' field.")
-                    continue
-                }
-
-                // Resolve folder UID (and create if it doesn't exist)
-                guard let resolvedFolderUid = try resolveFolder(folderIdentifier: folderIdentifier, context: context, grafanaConfig: grafanaConfig) else {
-                    context.console.error("Error: Could not resolve folder '\(folderIdentifier)' for alert in \(fileName).")
-                    continue
-                }
-                alertJSON["folderUID"] = resolvedFolderUid
-                alertJSON["folder"] = nil // Remove the "folder" field as it's replaced by "folderUID"
-
-                let endpoint = "/api/v1/provisioning/alert-rules"
-                let uid = alertJSON["uid"] as? String
-                
-                var request: URLRequest
-                if let uid = uid {
-                    let url = URL(string: "\(grafanaConfig.url)\(endpoint)/\(uid)")!
-                    request = URLRequest(url: url)
-                    request.httpMethod = "PUT"
-                } else {
-                    let url = URL(string: "\(grafanaConfig.url)\(endpoint)")!
-                    request = URLRequest(url: url)
-                    request.httpMethod = "POST"
-                }
-
-                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.setValue("Bearer \(grafanaConfig.token)", forHTTPHeaderField: "Authorization")
-                request.httpBody = try? JSONSerialization.data(withJSONObject: alertJSON, options: [])
-
-                let semaphore = DispatchSemaphore(value: 0)
-                var success = false
-
-                let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                    if let error = error {
-                        context.console.error("API call error for \(fileName): \(error.localizedDescription)")
-                        semaphore.signal()
-                        return
-                    }
-
-                    if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
-                        success = true
-                        if uid == nil, let data = data { // It was a new alert
-                            do {
-                                if let responseJSON = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                                   let newUid = responseJSON["uid"] as? String {
-                                    
-                                    alertJSON["uid"] = newUid
-                                    let updatedData = try JSONSerialization.data(withJSONObject: alertJSON, options: .prettyPrinted)
-                                    try updatedData.write(to: URL(fileURLWithPath: filePath))
-                                    context.console.info("Updated \(fileName) with new alert uid: \(newUid)")
-                                }
-                            } catch {
-                                context.console.error("Failed to update \(fileName) with new uid: \(error.localizedDescription)")
-                            }
-                        }
-                    }
-                    else {
-                        if let data = data, let responseBody = String(data: data, encoding: .utf8) {
-                            context.console.error("API call failed for \(fileName) with response: \(responseBody)")
-                        } else {
-                            context.console.error("API call failed for \(fileName) with status code \((response as? HTTPURLResponse)?.statusCode ?? 0)")
-                        }
-                    }
-                    semaphore.signal()
-                }
-                task.resume()
-                semaphore.wait()
-
-                if success {
-                    if uid == nil {
-                        context.console.success("Successfully created new Grafana alert from \(fileName).")
-                    } else {
-                        context.console.success("Successfully updated Grafana alert from \(fileName).")
-                    }
-                } else {
-                    context.console.error("Failed to apply Grafana configuration for \(fileName).")
-                }
-            } else {
-                context.console.error("Skipping \(fileName): Invalid file name. Please use one of the following suffixes: _dash.ext, _alert.ext")
-                continue
+                context.console.error("Error applying \(filePath): \(error.localizedDescription)")
             }
         }
     }
 
-    private struct GrafanaFolder: Codable {
-        let id: Int
-        let uid: String
-        let title: String
+    private func collectFiles(signature: Signature) throws -> [String] {
+        if signature.all {
+            guard signature.configFile == nil else {
+                throw CommandError.unknownCommand("", available: [])
+            }
+
+            let projectRoot = FileManager.default.currentDirectoryPath
+            var matches: [String] = []
+            if let enumerator = FileManager.default.enumerator(atPath: projectRoot) {
+                for case let element as String in enumerator {
+                    let fullPath = (projectRoot as NSString).appendingPathComponent(element)
+                    let fileName = (fullPath as NSString).lastPathComponent
+                    if fileName.contains("_dash.") || fileName.contains("_alert.") {
+                        matches.append(fullPath)
+                    }
+                }
+            }
+            return matches
+        } else if let configFile = signature.configFile {
+            return [configFile]
+        } else {
+            throw CommandError.unknownCommand("", available: [])
+        }
     }
 
-    private func resolveFolder(folderIdentifier: String, context: CommandContext, grafanaConfig: GrafanaConfig) throws -> String? {
-        let semaphore = DispatchSemaphore(value: 0)
-        var folderUid: String?
-        var folderError: Error?
+    private func processFile(
+        _ filePath: String,
+        environment: String,
+        grafanaConfig: GrafanaConfig,
+        context: CommandContext
+    ) async throws {
+        let fileName = URL(fileURLWithPath: filePath).lastPathComponent
+        let configFileContent = try String(contentsOfFile: filePath, encoding: .utf8)
 
-        let allFoldersUrl = URL(string: "\(grafanaConfig.url)/api/folders")!
-        var allFoldersRequest = URLRequest(url: allFoldersUrl)
-        allFoldersRequest.setValue("Bearer \(grafanaConfig.token)", forHTTPHeaderField: "Authorization")
-
-        let allFoldersTask = URLSession.shared.dataTask(with: allFoldersRequest) { data, response, error in
-            if let error = error {
-                folderError = error
-                semaphore.signal()
-                return
-            }
-
-            if let data = data, let folders = try? JSONDecoder().decode([GrafanaFolder].self, from: data) {
-                let identifier = folderIdentifier.starts(with: "folder://") ? String(folderIdentifier.dropFirst("folder://".count)) : folderIdentifier
-                
-                if identifier == "general" {
-                    folderUid = "general"
-                    semaphore.signal()
-                    return
-                }
-
-                for folder in folders {
-                    if folder.uid == identifier || folder.title == identifier {
-                        folderUid = folder.uid
-                        semaphore.signal()
-                        return
-                    }
-                }
-            }
-
-            // If we are here, folder is not found. Let's create it.
-            let identifier = folderIdentifier.starts(with: "folder://") ? String(folderIdentifier.dropFirst("folder://".count)) : folderIdentifier
-            let createFolderUrl = URL(string: "\(grafanaConfig.url)/api/folders")!
-            var createFolderRequest = URLRequest(url: createFolderUrl)
-            createFolderRequest.httpMethod = "POST"
-            createFolderRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            createFolderRequest.setValue("Bearer \(grafanaConfig.token)", forHTTPHeaderField: "Authorization")
-            let body = ["title": identifier]
-            createFolderRequest.httpBody = try? JSONEncoder().encode(body)
-
-            let createTask = URLSession.shared.dataTask(with: createFolderRequest) { data, response, error in
-                if let error = error {
-                    folderError = error
-                    semaphore.signal()
-                    return
-                }
-
-                if let data = data, let newFolder = try? JSONDecoder().decode(GrafanaFolder.self, from: data) {
-                    folderUid = newFolder.uid
-                } else {
-                    if let data = data, let responseBody = String(data: data, encoding: .utf8) {
-                        context.console.error("Failed to create folder. Response: \(responseBody)")
-                    }
-                    folderError = CommandError.unknownCommand("", available: []) // A bit of a hack for error
-                }
-                semaphore.signal()
-            }
-            createTask.resume()
+        if fileName.contains("_dash.") {
+            try await applyDashboard(
+                fileName: fileName,
+                filePath: filePath,
+                content: configFileContent,
+                grafanaConfig: grafanaConfig,
+                context: context
+            )
+        } else if fileName.contains("_alert.") {
+            try await applyAlert(
+                fileName: fileName,
+                filePath: filePath,
+                content: configFileContent,
+                grafanaConfig: grafanaConfig,
+                context: context
+            )
+        } else {
+            context.console.error("Skipping \(fileName): Invalid suffix.")
         }
-        allFoldersTask.resume()
-        semaphore.wait()
+    }
 
-        if let folderError = folderError {
-            throw folderError
+    private func applyDashboard(
+        fileName: String,
+        filePath: String,
+        content: String,
+        grafanaConfig: GrafanaConfig,
+        context: CommandContext
+    ) async throws {
+        guard var payload = try? JSONDecoder().decode([String: AnyCodableValue].self, from: Data(content.utf8)) else {
+            context.console.error("Could not parse dashboard JSON from \(fileName).")
+            return
         }
 
-        return folderUid
+        if let folderIdentifier = payload["folder"]?.stringValue,
+           let resolvedFolderUid = try await resolveFolder(folderIdentifier: folderIdentifier, grafanaConfig: grafanaConfig, context: context) {
+            payload["folderUid"] = AnyCodableValue(resolvedFolderUid)
+        }
+
+        let endpoint = "\(grafanaConfig.url)/api/dashboards/db"
+        let headers: HTTPHeaders = [
+            "Authorization": "Bearer \(grafanaConfig.token)",
+            "Content-Type": "application/json"
+        ]
+        let request = AF.request(
+            endpoint,
+            method: .post,
+            parameters: payload,
+            encoder: JSONParameterEncoder.default,
+            headers: headers
+        )
+
+        let response = await request.serializingData().response
+        try handleResponse(response, context: context, fileName: fileName)
+    }
+
+    private func applyAlert(
+        fileName: String,
+        filePath: String,
+        content: String,
+        grafanaConfig: GrafanaConfig,
+        context: CommandContext
+    ) async throws {
+        guard var alertJSON = try? JSONDecoder().decode([String: AnyCodableValue].self, from: Data(content.utf8)) else {
+            context.console.error("Could not parse alert JSON from \(fileName).")
+            return
+        }
+
+        if let folderIdentifier = alertJSON["folder"]?.stringValue {
+             let resolvedFolderUid = try await resolveFolder(folderIdentifier: folderIdentifier, grafanaConfig: grafanaConfig, context: context)
+            if let folderUid = resolvedFolderUid {
+                alertJSON["folderUID"] = AnyCodableValue(folderUid)
+            }
+        }
+
+        let uid = alertJSON["uid"]?.stringValue
+        let endpoint = "\(grafanaConfig.url)/api/v1/provisioning/alert-rules" + (uid != nil ? "/\(uid!)" : "")
+
+        let method: HTTPMethod = uid != nil ? .put : .post
+        let request = AF.request(
+            endpoint,
+            method: method,
+            parameters: alertJSON,
+            encoder: JSONParameterEncoder.default,
+            headers: ["Authorization": "Bearer \(grafanaConfig.token)"]
+        )
+
+        let response = await request.serializingData().response
+        try handleResponse(response, context: context, fileName: fileName)
+    }
+
+    private func resolveFolder(folderIdentifier: String, grafanaConfig: GrafanaConfig, context: CommandContext) async throws -> String? {
+        let endpoint = "\(grafanaConfig.url)/api/folders"
+        let headers: HTTPHeaders = ["Authorization": "Bearer \(grafanaConfig.token)"]
+
+        let dataResponse = await AF.request(endpoint, headers: headers).serializingDecodable([GrafanaFolder].self).response
+        switch dataResponse.result {
+        case .success(let folders):
+            let identifier = folderIdentifier.hasPrefix("folder://")
+                ? String(folderIdentifier.dropFirst("folder://".count))
+                : folderIdentifier
+            if let match = folders.first(where: { $0.uid == identifier || $0.title == identifier }) {
+                return match.uid
+            }
+        case .failure(let err):
+            throw err
+        }
+
+        // Create folder if not found
+        let createResponse = await AF.request(
+            endpoint,
+            method: .post,
+            parameters: ["title": folderIdentifier],
+            encoding: JSONEncoding.default,
+            headers: headers
+        ).serializingDecodable(GrafanaFolder.self).response
+
+        switch createResponse.result {
+        case .success(let folder):
+            return folder.uid
+        case .failure(let err):
+            throw err
+        }
+    }
+
+    private func handleResponse(_ response: AFDataResponse<Data>, context: CommandContext, fileName: String) throws {
+        print(String(data: response.data ?? Data(), encoding: .utf8) ?? "<no body>")
+        if let error = response.error {
+            throw error
+        }
+        if let httpResponse = response.response, !(200...299).contains(httpResponse.statusCode) {
+            let body = String(data: response.data ?? Data(), encoding: .utf8) ?? "<no body>"
+            context.console.error("API call failed for \(fileName): \(body)")
+            throw CommandError.unknownCommand("", available: [])
+        }
+        context.console.success("Successfully applied Grafana config for \(fileName).")
     }
 }
 
+private struct GrafanaFolder: Codable {
+    let id: Int
+    let uid: String
+    let title: String
+}
