@@ -1,6 +1,15 @@
 {
-  "originHash" : "eab4c932a746e29edc298eeb19eb72881a4d9b55f9d16a58ac73f856ae1a5adf",
+  "originHash" : "24187056806d8619094f3d304ddc73503acffbd83e29ee6d8b2bf0bc9d840492",
   "pins" : [
+    {
+      "identity" : "alamofire",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Alamofire/Alamofire.git",
+      "state" : {
+        "revision" : "513364f870f6bfc468f9d2ff0a95caccc10044c5",
+        "version" : "5.10.2"
+      }
+    },
     {
       "identity" : "console-kit",
       "kind" : "remoteSourceControl",
@@ -8,6 +17,15 @@
       "state" : {
         "revision" : "742f624a998cba2a9e653d9b1e91ad3f3a5dff6b",
         "version" : "4.15.2"
+      }
+    },
+    {
+      "identity" : "swift-any-codable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/getautomaapp/swift-any-codable/",
+      "state" : {
+        "revision" : "6dac9cf39f18f5091640fbbcb0590bf3b32728cb",
+        "version" : "1.0.3"
       }
     },
     {
