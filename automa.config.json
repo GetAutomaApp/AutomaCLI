@@ -1,6 +1,6 @@
 {
   "actionsSecrets" : {
-    "owner_repo" : ""
+    "owner_repo" : "GetAutomaApp/AutomaCLI"
   },
   "fly" : {
     "environments" : [
@@ -11,6 +11,6 @@
     "config_files_root" : "fly"
   },
   "grafana": {
-    "current_environment": "staging"
+    "current_environment": "automa"
   }
 }
