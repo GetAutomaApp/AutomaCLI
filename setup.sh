@@ -9,7 +9,7 @@ if [ -f "$CONFIG_FILE" ]; then
     echo "Warning: Existing configuration file at $CONFIG_FILE will be overwritten."
     if [ "$AUTOMA_FORCE_OVERWRITE" != "true" ]; then
         echo "Error: Configuration file already exists at $CONFIG_FILE. To overwrite, set AUTOMA_FORCE_OVERWRITE=true."
-        echo "Example: AUTOMA_FORCE_OVERWRITE=true curl -sSL https://raw.githubusercontent.com/GetAutomaApp/AutomaCLI/main/setup.sh | bash"
+        echo "Example: export AUTOMA_FORCE_OVERWRITE=true; ... command you just ran"
         exit 1
     fi
 fi
