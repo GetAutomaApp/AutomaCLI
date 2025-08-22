@@ -1,6 +1,15 @@
 {
-  "originHash" : "7a8306326bd4c6aacd3a84c75cd616fb143241be2e95adadd604281f4bf6bd45",
+  "originHash" : "24187056806d8619094f3d304ddc73503acffbd83e29ee6d8b2bf0bc9d840492",
   "pins" : [
+    {
+      "identity" : "alamofire",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Alamofire/Alamofire.git",
+      "state" : {
+        "revision" : "513364f870f6bfc468f9d2ff0a95caccc10044c5",
+        "version" : "5.10.2"
+      }
+    },
     {
       "identity" : "console-kit",
       "kind" : "remoteSourceControl",
@@ -8,6 +17,15 @@
       "state" : {
         "revision" : "742f624a998cba2a9e653d9b1e91ad3f3a5dff6b",
         "version" : "4.15.2"
+      }
+    },
+    {
+      "identity" : "swift-any-codable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/getautomaapp/swift-any-codable/",
+      "state" : {
+        "revision" : "6dac9cf39f18f5091640fbbcb0590bf3b32728cb",
+        "version" : "1.0.3"
       }
     },
     {
@@ -26,6 +44,15 @@
       "state" : {
         "revision" : "c1805596154bb3a265fd91b8ac0c4433b4348fb0",
         "version" : "1.2.0"
+      }
+    },
+    {
+      "identity" : "swift-dotenv",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/thebarndog/swift-dotenv",
+      "state" : {
+        "revision" : "d13062940a3cdb2b13efa22ecc83b07b21c2e8dc",
+        "version" : "2.1.0"
       }
     },
     {

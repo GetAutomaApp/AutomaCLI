@@ -1,0 +1,33 @@
+import SwiftUI
+
+/**
+The `__CAPNAME__Modifier` is a view modifier that ___
+
+Add a detailed description here of how to use this
+
+- Parameters:
+    - content: The SwiftUI view being modified.
+- Returns: some View
+
+To see usage examples & visuals, check out `__CAPNAME__ModifierDocumentation.md`
+*/
+internal struct __CAPNAME__Modifier: ViewModifier {
+    /// Modifies the content view.
+    /// - Parameter content: The SwiftUI view being modified.
+    /// - Returns: A modified view.
+    public func body(content: Content) -> some View {
+        content
+            // Add your custom modifications here
+    }
+}
+
+/// Type alias for view types that can be modified by `__CAPNAME__Modifier`.
+public typealias __CAPNAME__ModifierViewTypes = View // Use Type Narrowing Please!
+
+public extension __CAPNAME__ModifierViewTypes {
+    /// Applies the `__CAPNAME__Modifier` to the view.
+    /// - Returns: A modified view.
+    public func __CAPNAME_HASKELL__() -> some View {
+        self.modifier(__CAPNAME__Modifier())
+    }
+}

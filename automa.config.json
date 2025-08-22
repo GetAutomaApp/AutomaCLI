@@ -1,0 +1,16 @@
+{
+  "actionsSecrets" : {
+    "owner_repo" : "GetAutomaApp/AutomaCLI"
+  },
+  "fly" : {
+    "environments" : [
+      "production",
+      "sandbox",
+      "staging"
+    ],
+    "config_files_root" : "fly"
+  },
+  "grafana": {
+    "current_environment": "automa"
+  }
+}

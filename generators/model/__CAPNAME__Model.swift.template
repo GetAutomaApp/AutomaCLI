@@ -1,0 +1,70 @@
+import Vapor
+import Fluent
+import DataTypes
+
+/// Represents a model for `__CAPNAME__`.
+public final class __CAPNAME__Model: Model, @unchecked Sendable {
+    /// The schema name for the model.
+    public static let schema = "__CAPNAME_DASHED__"
+
+    @ID(key: .id)
+    public var id: UUID?
+
+    @Timestamp(key: "created_at", on: .create)
+    public var createdAt: Date?
+
+    @Timestamp(key: "updated_at", on: .update)
+    public var updatedAt: Date?
+
+    @Timestamp(key: "deleted_at", on: .delete)
+    public var deletedAt: Date?
+
+    /// Initializes a new instance of `__CAPNAME__Model`.
+    public init() {}
+
+    /// Initializes a new instance of `__CAPNAME__Model` with the given parameters.
+    /// - Parameters:
+    ///   - id: The unique identifier for the model.
+    ///   - createdAt: The creation date of the model.
+    ///   - updatedAt: The last update date of the model.
+    ///   - deletedAt: The deletion date of the model.
+    public init(
+        id: UUID? = nil,
+        createdAt: Date? = nil,
+        updatedAt: Date? = nil,
+        deletedAt: Date? = nil
+    ) {
+        self.id = id
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
+    }
+
+    /// Converts the model to a DTO.
+    /// - Returns: A `__CAPNAME__DTO` representing the model.
+    public func toDTO() -> __CAPNAME__DTO {
+        .init(
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt
+        )
+    }
+
+    /// Creates a model from a DTO.
+    /// - Parameter dto: The DTO to convert.
+    /// - Returns: A `__CAPNAME__Model` representing the DTO.
+    public static func fromDTO(dto: __CAPNAME__DTO) -> __CAPNAME__Model {
+        let model = __CAPNAME__Model(
+            id: dto.id,
+            createdAt: dto.createdAt,
+            updatedAt: dto.updatedAt,
+            deletedAt: dto.deletedAt
+        )
+        return model
+    }
+
+    deinit {
+        return
+    }
+}
