@@ -1,0 +1,46 @@
+name: Swift Build & Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: "6.1"
+
+      - name: Build Swift Package
+        run: |
+          mkdir -p .build/release
+          swift build -c release -Xswiftc -DNO_AUTOMATIC_UPDATE
+
+      - name: Prepare Release Assets
+        run: |
+          mkdir -p /tmp/release-action/assets
+          
+          cp .build/release/MyApp /tmp/release-action/assets/
+          
+          zip -r /tmp/release-action/assets/source.zip . -x ".build/*"
+          
+          echo "Initial test release. Patches only." > /tmp/release-action/assets/changelog.txt
+          
+          cat <<EOF > /tmp/release-action/release-config.json
+{
+  "title": "test-release",
+  "bump": "patch",
+  "description": "Initial test release",
+  "description-adders": ["commits", "new-contributors", "diff-from-previous-release"]
+}
+EOF
+
+      - name: Create Release
+        uses: GetAutomaApp/opensource-actions@simon/implement-release-action
+        with:
+          CONFIG_PATH: /tmp/release-action/release-config.json
+          ASSETS_PATH: /tmp/release-action/assets
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
