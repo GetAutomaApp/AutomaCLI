@@ -11,36 +11,41 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
+      # 1️⃣ Checkout the repo
       - uses: actions/checkout@v4
 
+      # 2️⃣ Setup Swift
       - uses: SwiftyLab/setup-swift@latest
         with:
           swift-version: "6.1"
 
+      # 3️⃣ Build Swift package with custom flag
       - name: Build Swift Package
         run: |
           mkdir -p .build/release
           swift build -c release -Xswiftc -DNO_AUTOMATIC_UPDATE
 
+      # 4️⃣ Prepare release assets
       - name: Prepare Release Assets
         run: |
           mkdir -p /tmp/release-action/assets
           
-          # Copy built binary (assumes executable named `automa`)
+          # Copy built binary (replace 'automa' with your executable name if different)
           cp .build/release/automa /tmp/release-action/assets/
           
-          # Zip the source code
+          # Zip the source code excluding build artifacts
           zip -r /tmp/release-action/assets/source.zip . -x ".build/*"
           
           # Generate a simple changelog
           echo "Initial test release. Patches only." > /tmp/release-action/assets/changelog.txt
           
-          # Create minimal release config using echo with quotes
+          # Create minimal release config using echo
           echo '{"title":"test-release","bump":"patch","description":"Initial test release","description-adders":["commits","new-contributors","diff-from-previous-release"]}' > /tmp/release-action/release-config.json
 
+      # 5️⃣ Run the release action
       - name: Create Release
         uses: GetAutomaApp/opensource-actions/release@simon/implement-release-action
         with:
-          CONFIG_PATH: /tmp/release-action/release-config.json
-          ASSETS_PATH: /tmp/release-action/assets
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-path: /tmp/release-action/release-config.json
+          assets-path: /tmp/release-action/assets
