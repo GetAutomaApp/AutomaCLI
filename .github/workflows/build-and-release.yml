@@ -39,7 +39,7 @@ jobs:
           echo '{"title":"test-release","bump":"patch","description":"Initial test release","description-adders":["commits","new-contributors","diff-from-previous-release"]}' > /tmp/release-action/release-config.json
 
       - name: Create Release
-        uses: GetAutomaApp/opensource-actions@simon/implement-release-action
+        uses: GetAutomaApp/opensource-actions/release@simon/implement-release-action
         with:
           CONFIG_PATH: /tmp/release-action/release-config.json
           ASSETS_PATH: /tmp/release-action/assets
