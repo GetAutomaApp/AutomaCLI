@@ -2,6 +2,9 @@ name: Swift Build & Release
 
 on:
   workflow_dispatch: 
+  push:              
+    branches:
+      - simon/static-releases
 
 jobs:
   run:
