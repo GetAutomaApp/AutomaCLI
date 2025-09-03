@@ -23,20 +23,17 @@ jobs:
         run: |
           mkdir -p /tmp/release-action/assets
           
+          # Copy built binary (assumes executable named `MyApp`)
           cp .build/release/MyApp /tmp/release-action/assets/
           
+          # Zip the source code
           zip -r /tmp/release-action/assets/source.zip . -x ".build/*"
           
+          # Generate a simple changelog
           echo "Initial test release. Patches only." > /tmp/release-action/assets/changelog.txt
           
-          cat <<EOF > /tmp/release-action/release-config.json
-{
-  "title": "test-release",
-  "bump": "patch",
-  "description": "Initial test release",
-  "description-adders": ["commits", "new-contributors", "diff-from-previous-release"]
-}
-EOF
+          # Create minimal release config using echo with quotes
+          echo '{"title":"test-release","bump":"patch","description":"Initial test release","description-adders":["commits","new-contributors","diff-from-previous-release"]}' > /tmp/release-action/release-config.json
 
       - name: Create Release
         uses: GetAutomaApp/opensource-actions@simon/implement-release-action
