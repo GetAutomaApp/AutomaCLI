@@ -26,8 +26,8 @@ jobs:
         run: |
           mkdir -p /tmp/release-action/assets
           
-          # Copy built binary (assumes executable named `MyApp`)
-          cp .build/release/MyApp /tmp/release-action/assets/
+          # Copy built binary (assumes executable named `automa`)
+          cp .build/release/automa /tmp/release-action/assets/
           
           # Zip the source code
           zip -r /tmp/release-action/assets/source.zip . -x ".build/*"

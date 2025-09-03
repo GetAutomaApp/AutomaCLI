@@ -19,7 +19,11 @@ internal struct AutomaCLI {
         var input = CommandInput(arguments: ProcessInfo.processInfo.arguments)
 
         if !input.arguments.contains("--no-update") {
-            autoUpdate()
+            #if NO_AUTOMATIC_UPDATE
+                // for binary releases we don't automatically update 
+            #else
+                autoUpdate()
+            #endif
         } else {
             input.arguments.removeAll { $0 == "--no-update" }
         }
