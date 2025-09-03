@@ -1,8 +1,7 @@
 name: Swift Build & Release
 
 on:
-  push:
-    branches: ["*"]
+  workflow_dispatch: 
 
 jobs:
   run:
