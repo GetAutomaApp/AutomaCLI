@@ -6,8 +6,7 @@ import PackageDescription
 internal let package = Package(
     name: "AutomaCLI",
     platforms: [
-        .macOS(.v15),
-        .linux
+        .macOS(.v15)
     ],
     products: [
         .executable(
