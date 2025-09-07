@@ -9,7 +9,12 @@ import Foundation
 internal struct GenerateGroup: CommandGroup {
     let commands: [String: AnyCommand] = [
         "fly": GenerateFly(),
-        "generate": GenerateCommand(),
+        #if NO_BUILTIN_TEMPLATE_GENERATE
+            // if true don't allow generating from base templates 
+            // we don't have these assets in the binary release
+        #else
+            "generate": GenerateCommand(),
+        #endif
     ]
 
     let help = "Generates code templates."
