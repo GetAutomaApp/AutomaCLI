@@ -40,7 +40,7 @@ jobs:
           echo "Initial test release. Patches only." > /tmp/release-action/assets/changelog.txt
           
           # Create minimal release config using echo
-          echo '{"title":"test-release","bump":"patch","description":"Initial test release","description-adders":["commits","new-contributors","diff-from-previous-release"]}' > /tmp/release-action/release-config.json
+          echo '{"title":"test-release ({action-new-version})","bump":"patch","description":"Initial test release","description-adders":["commits","new-contributors","diff-from-previous-release"]}' > /tmp/release-action/release-config.json
 
       # 5️⃣ Run the release action
       - name: Create Release
