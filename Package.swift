@@ -28,6 +28,9 @@ internal let package = Package(
                 .product(name: "SwiftDotenv", package: "swift-dotenv"),
                 .product(name: "Alamofire", package: "Alamofire"),
                 .product(name: "AnyCodable", package: "swift-any-codable")
+            ],
+            linkerSettings: [
+                .linkedLibrary("curl")
             ]
         ),
     ]

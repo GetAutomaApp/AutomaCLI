@@ -1,0 +1,45 @@
+name: Swift Build & Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main 
+
+jobs:
+  run:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev pkg-config zlib1g-dev
+
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: "6.1"
+
+      - name: Build Swift Package
+        run: |
+          mkdir -p .build/release
+          swift build -c release --static-swift-stdlib -Xswiftc -DNO_AUTOMATIC_UPDATE -DNO_BUILTIN_TEMPLATE_GENERATE
+
+      - name: Prepare Release Assets
+        run: |
+          mkdir -p /tmp/release-action/assets
+          
+          cp .build/release/automa /tmp/release-action/assets/
+          
+          zip -r /tmp/release-action/assets/source.zip . -x ".build/*"
+          
+          echo '{"title":"test-release ({action-new-version})","bump":"{commit-message}","description":"This is an automated release process! This CLI Distribution is used by many of our build processes.","description-adders":["commits","new-contributors","diff-from-previous-release"]}' > /tmp/release-action/release-config.json
+
+      - name: Create Release
+        uses: GetAutomaApp/opensource-actions/release@main
+        with:
+          github-token: ${{ secrets.PAT_GITHUB_RELEASE_BUILD_TOKEN }}
+          config-path: /tmp/release-action/release-config.json
+          assets-path: /tmp/release-action/assets

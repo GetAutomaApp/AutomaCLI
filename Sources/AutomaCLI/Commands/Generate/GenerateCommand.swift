@@ -7,10 +7,17 @@ import ConsoleKit
 import Foundation
 
 internal struct GenerateGroup: CommandGroup {
-    let commands: [String: AnyCommand] = [
-        "fly": GenerateFly(),
-        "generate": GenerateCommand(),
-    ]
+    let commands: [String: AnyCommand] = {
+        var cmds: [String: AnyCommand] = [
+            "fly": GenerateFly(),
+        ]
+
+        #if !NO_BUILTIN_TEMPLATE_GENERATE
+        cmds["generate"] = GenerateCommand()
+        #endif
+
+        return cmds
+    }()
 
     let help = "Generates code templates."
 
