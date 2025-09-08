@@ -38,7 +38,7 @@ jobs:
           echo '{"title":"test-release ({action-new-version})","bump":"{commit-message}","description":"This is an automated release process! This CLI Distribution is used by many of our build processes.","description-adders":["commits","new-contributors","diff-from-previous-release"]}' > /tmp/release-action/release-config.json
 
       - name: Create Release
-        uses: GetAutomaApp/opensource-actions/release@simon/implement-release-action
+        uses: GetAutomaApp/opensource-actions/release@main
         with:
           github-token: ${{ secrets.PAT_GITHUB_RELEASE_BUILD_TOKEN }}
           config-path: /tmp/release-action/release-config.json
