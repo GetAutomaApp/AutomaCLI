@@ -457,6 +457,7 @@ internal struct GenerateFly: Command {
         let config = try ConfigHelper.getAutomaConfig()
 
         let configPath = "\(config.fly.configFilesRoot)/\(template).toml"
+        print(configPath)
 
         guard FileManager.default.fileExists(atPath: configPath) else {
             context.console.print("😭 can't find config directory")
