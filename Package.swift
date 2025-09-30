@@ -16,7 +16,6 @@ internal let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.1.5"),
-        .package(url: "https://github.com/thebarndog/swift-dotenv", from: "2.1.0"),
         .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.10.0")),
         .package(url: "https://github.com/getautomaapp/swift-any-codable/", from: "1.0.0")
     ],
@@ -25,7 +24,6 @@ internal let package = Package(
             name: "AutomaCLI",
             dependencies: [
                 .product(name: "ConsoleKit", package: "console-kit"),
-                .product(name: "SwiftDotenv", package: "swift-dotenv"),
                 .product(name: "Alamofire", package: "Alamofire"),
                 .product(name: "AnyCodable", package: "swift-any-codable")
             ],

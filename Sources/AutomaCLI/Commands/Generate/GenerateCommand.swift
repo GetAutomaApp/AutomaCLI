@@ -13,7 +13,7 @@ internal struct GenerateGroup: CommandGroup {
         ]
 
         #if !NO_BUILTIN_TEMPLATE_GENERATE
-        cmds["generate"] = GenerateCommand()
+            cmds["generate"] = GenerateCommand()
         #endif
 
         return cmds
@@ -466,21 +466,10 @@ internal struct GenerateFly: Command {
 
         var content = try String(contentsOfFile: configPath, encoding: .utf8)
 
-        guard
-            let metricsToken = ProcessInfo.processInfo.environment["FLY_METRICS_TOKEN"]
-        else {
-            context.console.print("😭 FLY_METRICS_TOKEN not found in .env.cli")
-            throw URLError(.badURL)
-        }
-
         content = content
             .replacingOccurrences(
                 of: "__FLY_ENVIRONMENT__",
                 with: environment
-            )
-            .replacingOccurrences(
-                of: "__FLY_METRICS_TOKEN__",
-                with: metricsToken
             )
 
         let newFileUUID = UUID().uuidString

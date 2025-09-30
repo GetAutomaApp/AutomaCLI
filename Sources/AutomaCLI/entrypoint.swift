@@ -8,19 +8,16 @@
 import ConsoleKit
 import Foundation
 import Logging
-import SwiftDotenv
 
 @main
 internal struct AutomaCLI {
     internal static func main() async {
-        try? Dotenv.configure(atPath: ".env.cli")
-
         let console = Terminal()
         var input = CommandInput(arguments: ProcessInfo.processInfo.arguments)
 
         if !input.arguments.contains("--no-update") {
             #if NO_AUTOMATIC_UPDATE
-                // for binary releases we don't automatically update 
+            // for binary releases we don't automatically update
             #else
                 autoUpdate()
             #endif
@@ -91,7 +88,9 @@ internal struct AutomaCLI {
                 let symlinkResult = try Shell.run("sudo ln -s \(binPath) \(linkPath)")
                 if symlinkResult.isError {
                     print("Warning: Failed to create symbolic link.")
-                    print("You may need to add /usr/local/bin to your PATH or run the script with appropriate permissions.")
+                    print(
+                        "You may need to add /usr/local/bin to your PATH or run the script with appropriate permissions."
+                    )
                     print("Error: \(symlinkResult.stderr ?? "Unknown error")")
                 } else {
                     print("AutomaCLI updated and symlinked successfully.")
