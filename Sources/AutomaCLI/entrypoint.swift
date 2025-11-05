@@ -48,7 +48,7 @@ internal struct AutomaCLI {
             let currentDirectory = FileManager.default.currentDirectoryPath
             defer {
                 // Restore original directory after function exits
-                FileManager.default.changeCurrentDirectoryPath(currentDirectory)
+                _ = FileManager.default.changeCurrentDirectoryPath(currentDirectory)
             }
             guard FileManager.default.changeCurrentDirectoryPath(repoPath) else {
                 print("Error: Could not change to repository directory: \(repoPath)")
