@@ -12,6 +12,8 @@ internal struct AutomaConfig: Codable {
     let actionsSecrets: ActionsSecretsConfig
     /// Grafana project configuration
     let grafana: GrafanaProjectConfig
+    /// Obsidian vault configuration
+    let obsidian: ObsidianConfig?
 }
 
 internal struct GrafanaProjectConfig: Codable {
@@ -44,6 +46,15 @@ internal struct ActionsSecretsConfig: Codable {
     /// coding keys
     enum CodingKeys: String, CodingKey {
         case ownerRepo = "owner_repo"
+    }
+}
+
+internal struct ObsidianConfig: Codable {
+    /// The name of the Obsidian vault to target for secret reads
+    let vaultName: String
+
+    enum CodingKeys: String, CodingKey {
+        case vaultName = "vault_name"
     }
 }
 

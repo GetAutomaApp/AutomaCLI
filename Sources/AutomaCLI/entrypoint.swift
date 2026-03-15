@@ -28,6 +28,7 @@ internal struct AutomaCLI {
         var commands = AsyncCommands(enableAutocomplete: true)
         commands.use(GenerateGroup(), as: "generate", isDefault: false)
         commands.use(InfraCommand(), as: "infra", isDefault: false)
+        commands.use(SecretsCommand(), as: "secrets", isDefault: false)
         commands.use(SetupCommand(), as: "setup", isDefault: false)
         commands.use(GrafanaCommand(), as: "grafana")
 

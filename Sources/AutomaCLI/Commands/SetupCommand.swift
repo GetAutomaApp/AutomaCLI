@@ -21,7 +21,8 @@ internal struct SetupCommand: Command {
             let defaultConfig = AutomaConfig(
                 fly: FlyConfig(configFilesRoot: "fly", environments: ["production", "sandbox", "staging"]),
                 actionsSecrets: ActionsSecretsConfig(ownerRepo: ""),
-                grafana: GrafanaProjectConfig(currentEnvironment: "staging")
+                grafana: GrafanaProjectConfig(currentEnvironment: "staging"),
+                obsidian: ObsidianConfig(vaultName: "")
             )
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted

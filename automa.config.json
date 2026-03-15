@@ -12,5 +12,8 @@
   },
   "grafana": {
     "current_environment": "automa"
+  },
+  "obsidian": {
+    "vault_name": ""
   }
 }
