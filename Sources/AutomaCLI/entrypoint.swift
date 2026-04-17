@@ -79,14 +79,15 @@ internal struct AutomaCLI {
                 print("New version available. Updating...")
                 _ = try Shell.run("git pull origin main")
                 print("Building AutomaCLI...")
-                _ = try Shell.run("swift build -c release")
+                _ = try Shell.run("/usr/bin/xcrun swift build -c release")
 
                 let binPath = "\(repoPath)/.build/release/automa"
                 let linkPath = "/usr/local/bin/automa"
 
-                print("Creating symbolic link for AutomaCLI...")
-                _ = try Shell.run("sudo rm -f \(linkPath)") // Use -f to force remove without prompt
-                let symlinkResult = try Shell.run("sudo ln -s \(binPath) \(linkPath)")
+                print("Creating symbolic link for AutomaCLI with elevated permissions...")
+                let symlinkResult = try Shell.runPrivileged(
+                    "ln -sf \(binPath.shellEscapedArgument) \(linkPath.shellEscapedArgument)"
+                )
                 if symlinkResult.isError {
                     print("Warning: Failed to create symbolic link.")
                     print(

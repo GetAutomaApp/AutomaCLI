@@ -49,6 +49,27 @@ internal struct Shell {
     /// - Returns: The output of the command.
     @discardableResult
     static func run(_ command: String) throws -> ShellOutput {
+        try run(command, executableURL: URL(filePath: "/bin/zsh"), arguments: ["-c", command])
+    }
+
+    @discardableResult
+    static func runPrivileged(_ command: String) throws -> ShellOutput {
+        #if os(macOS)
+            let appleScript = """
+            do shell script \(command.appleScriptEscapedArgument) with administrator privileges
+            """
+            return try run(
+                appleScript,
+                executableURL: URL(filePath: "/usr/bin/osascript"),
+                arguments: ["-e", appleScript]
+            )
+        #else
+            return try run("sudo \(command)")
+        #endif
+    }
+
+    @discardableResult
+    private static func run(_ command: String, executableURL: URL, arguments: [String]) throws -> ShellOutput {
         let task = Process()
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -56,10 +77,8 @@ internal struct Shell {
         // Set up the process to execute the command
         task.standardOutput = stdoutPipe
         task.standardError = stderrPipe
-        task.executableURL = URL(filePath: "/bin/zsh")
-
-        let fullCommand = "\(command)"
-        task.arguments = ["-c", fullCommand]
+        task.executableURL = executableURL
+        task.arguments = arguments
 
         task.standardInput = nil
         try task.run()
@@ -119,5 +138,15 @@ internal struct Shell {
         case .linux, .unknown:
             "/tmp/\(UUID().uuidString)"
         }
+    }
+}
+
+internal extension String {
+    var shellEscapedArgument: String {
+        "\"\(replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\""))\""
+    }
+
+    var appleScriptEscapedArgument: String {
+        "\"\(replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\""))\""
     }
 }

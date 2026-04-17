@@ -280,9 +280,3 @@ private struct ObsidianSecretsClient {
         }
     }
 }
-
-private extension String {
-    var shellEscapedArgument: String {
-        "\"\(replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\""))\""
-    }
-}

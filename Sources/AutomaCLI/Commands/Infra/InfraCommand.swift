@@ -278,9 +278,3 @@ private struct InfraObsidianSecretsClient {
         return output.stdout?.trimmingCharacters(in: .newlines) ?? ""
     }
 }
-
-private extension String {
-    var shellEscapedArgument: String {
-        "\"\(replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\""))\""
-    }
-}
