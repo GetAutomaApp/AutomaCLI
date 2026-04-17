@@ -222,11 +222,11 @@ internal struct DeployFlySecretsCommand: Command {
         let output = try Shell.run(command)
 
         if let stdout = output.stdout?.trimmingCharacters(in: .whitespacesAndNewlines), !stdout.isEmpty {
-            context.console.print(stdout)
+            context.console.print(indentedChildOutput(stdout))
         }
 
         if let stderr = output.stderr?.trimmingCharacters(in: .whitespacesAndNewlines), !stderr.isEmpty {
-            context.console.error(stderr)
+            context.console.error(indentedChildOutput(stderr))
         }
 
         if output.isError {
@@ -257,6 +257,13 @@ internal struct DeployFlySecretsCommand: Command {
         }
 
         return EnvFileSummary(entryCount: keys.count, uniqueKeys: Set(keys))
+    }
+
+    private func indentedChildOutput(_ output: String) -> String {
+        output
+            .split(whereSeparator: \.isNewline)
+            .map { "\t\($0)" }
+            .joined(separator: "\n")
     }
 
     private func printDeploySecretsConfigHelp(using context: CommandContext) {
