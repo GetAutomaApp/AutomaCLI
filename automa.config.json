@@ -3,11 +3,12 @@
     "owner_repo" : "GetAutomaApp/AutomaCLI"
   },
   "fly" : {
-    "environments" : [
-      "production",
-      "sandbox",
-      "staging"
-    ],
+    "deploy_secrets" : {
+      "your-fly-app" : [
+        "base.env",
+        "override.env"
+      ]
+    },
     "config_files_root" : "fly"
   },
   "grafana": {

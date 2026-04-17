@@ -11,6 +11,7 @@ import Foundation
 internal struct InfraCommand: CommandGroup {
     let commands: [String: AnyCommand] = [
         "set-actions-secrets": SetActionsSecretsCommand(),
+        "deploy-fly-secrets": DeployFlySecretsCommand(),
     ]
 
     let help = "Infrastructure related commands."
@@ -123,5 +124,151 @@ internal struct SetActionsSecretsCommand: Command {
                 context.console.print("  \(key): ${{ secrets.\(key) }}")
             }
         }
+    }
+}
+
+internal struct DeployFlySecretsCommand: Command {
+    init() {}
+
+    var help: String {
+        "Imports ordered Obsidian env files into each configured Fly app using fly.deploy_secrets."
+    }
+
+    struct Signature: CommandSignature {
+        init() {}
+    }
+
+    func run(using context: CommandContext, signature _: Signature) throws {
+        do {
+            _ = try Shell.run("command -v fly")
+        } catch {
+            context.console.warning("Fly CLI (fly) is not installed.")
+            context.console.print("Please install it and run 'fly auth login', then run this command again.")
+            return
+        }
+
+        let config = try ConfigHelper.getAutomaConfig()
+        guard let deploySecrets = config.fly.deploySecrets, !deploySecrets.isEmpty else {
+            printDeploySecretsConfigHelp(using: context)
+            return
+        }
+
+        let obsidian = try InfraObsidianSecretsClient(context: context)
+
+        for appName in deploySecrets.keys.sorted() {
+            let files = deploySecrets[appName] ?? []
+            let normalizedFiles = files.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+
+            if normalizedFiles.isEmpty {
+                context.console.warning("Skipping \(appName): no env files configured.")
+                continue
+            }
+
+            context.console.print("Deploying Fly secrets for \(appName)...")
+
+            for filename in normalizedFiles {
+                let content = try obsidian.read(file: filename)
+
+                if content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    context.console.warning("Skipping empty secret file \(filename) for \(appName).")
+                    continue
+                }
+
+                context.console.print("Importing \(filename) into \(appName)...")
+                try importSecrets(content: content, appName: appName, context: context)
+            }
+
+            context.console.success("Successfully imported Fly secrets into \(appName).")
+        }
+    }
+
+    private func importSecrets(content: String, appName: String, context: CommandContext) throws {
+        let normalizedAppName = appName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if normalizedAppName.isEmpty {
+            context.console.error("Error: app-name cannot be empty.")
+            throw CLIError.shellError(message: "Missing Fly app name.", error: nil)
+        }
+
+        let command = "printf %s \(content.shellEscapedArgument) | fly secrets import -a \(normalizedAppName.shellEscapedArgument)"
+        let output = try Shell.run(command)
+
+        if let stdout = output.stdout?.trimmingCharacters(in: .whitespacesAndNewlines), !stdout.isEmpty {
+            context.console.print(stdout)
+        }
+
+        if let stderr = output.stderr?.trimmingCharacters(in: .whitespacesAndNewlines), !stderr.isEmpty {
+            context.console.error(stderr)
+        }
+
+        if output.isError {
+            context.console.error("Failed to import Fly secrets.")
+            context.console.print("Please ensure 'fly auth login' has completed and the app name is correct.")
+            throw CLIError.shellError(message: "Failed to import Fly secrets.", error: output.stderr)
+        }
+    }
+
+    private func printDeploySecretsConfigHelp(using context: CommandContext) {
+        context.console.print("No fly.deploy_secrets configuration found in automa.config.json.")
+        context.console.print("Add it in this format to enable automatic Fly secret deployment:")
+        context.console.print("{")
+        context.console.print("  \"fly\": {")
+        context.console.print("    \"deploy_secrets\": {")
+        context.console.print("      \"your-fly-app\": [\"base.env\", \"override.env\"]")
+        context.console.print("    }")
+        context.console.print("  }")
+        context.console.print("}")
+        context.console.print("Env files are imported in order, so later files override earlier values.")
+    }
+}
+
+private struct InfraObsidianSecretsClient {
+    private let context: CommandContext
+    private let vaultName: String
+
+    init(context: CommandContext) throws {
+        self.context = context
+
+        let config = try ConfigHelper.getAutomaConfig()
+        let vaultName = config.obsidian?.vaultName.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if vaultName.isEmpty {
+            context.console.error("Error: obsidian.vault_name is not set in automa.config.json.")
+            context.console.print(
+                "Please edit automa.config.json and set obsidian.vault_name to your Obsidian vault name."
+            )
+            throw CLIError.shellError(message: "Missing Obsidian vault name.", error: nil)
+        }
+
+        let obsidianCLI = try Shell.run("command -v obsidian")
+        if obsidianCLI.isError {
+            context.console.error("Error: obsidian CLI is not installed or not on PATH.")
+            throw CLIError.shellError(message: "Missing obsidian CLI.", error: obsidianCLI.stderr)
+        }
+
+        self.vaultName = vaultName
+    }
+
+    func read(file: String) throws -> String {
+        let filename = file.trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = try Shell.run(
+            "obsidian vault=\(vaultName.shellEscapedArgument) read file=\(filename.shellEscapedArgument)"
+        )
+
+        if let stderr = output.stderr?.trimmingCharacters(in: .whitespacesAndNewlines), !stderr.isEmpty {
+            context.console.error(stderr)
+        }
+
+        if output.isError {
+            throw CLIError.shellError(message: "Failed to read secret from Obsidian.", error: output.stderr)
+        }
+
+        return output.stdout?.trimmingCharacters(in: .newlines) ?? ""
+    }
+}
+
+private extension String {
+    var shellEscapedArgument: String {
+        "\"\(replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\""))\""
     }
 }

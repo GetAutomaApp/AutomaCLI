@@ -19,7 +19,10 @@ internal struct SetupCommand: Command {
             context.console.print("automa.config.json already exists.")
         } else {
             let defaultConfig = AutomaConfig(
-                fly: FlyConfig(configFilesRoot: "fly", environments: ["production", "sandbox", "staging"]),
+                fly: FlyConfig(
+                    configFilesRoot: "fly",
+                    deploySecrets: [:]
+                ),
                 actionsSecrets: ActionsSecretsConfig(ownerRepo: ""),
                 grafana: GrafanaProjectConfig(currentEnvironment: "staging"),
                 obsidian: ObsidianConfig(vaultName: "")

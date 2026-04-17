@@ -29,13 +29,13 @@ internal struct GrafanaProjectConfig: Codable {
 internal struct FlyConfig: Codable {
     /// Where the config files are stored for fly
     let configFilesRoot: String
-    /// Which environments you have in the project
-    let environments: [String]
+    /// Mapping of Fly app names to ordered Obsidian env files for secret import
+    let deploySecrets: [String: [String]]?
 
     /// coding keys
     enum CodingKeys: String, CodingKey {
         case configFilesRoot = "config_files_root"
-        case environments
+        case deploySecrets = "deploy_secrets"
     }
 }
 
