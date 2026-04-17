@@ -178,6 +178,9 @@ internal struct DeployFlySecretsCommand: Command {
             }
 
             context.console.print("Deploying Fly secrets for \(appName)...")
+            var totalEntriesApplied = 0
+            var totalUniqueKeysApplied = Set<String>()
+            var totalMachinesUpdated = 0
 
             for filename in normalizedFiles {
                 let content = try obsidian.read(file: filename)
@@ -187,15 +190,28 @@ internal struct DeployFlySecretsCommand: Command {
                     continue
                 }
 
-                context.console.print("Importing \(filename) into \(appName)...")
-                try importSecrets(content: content, appName: appName, context: context)
+                let summary = summarizeEnvFile(content)
+                context.console.print(
+                    "Importing \(filename) into \(appName) (\(summary.entryCount) entries, \(summary.uniqueKeys.count) unique keys)..."
+                )
+
+                let importSummary = try importSecrets(content: content, appName: appName, context: context)
+                totalEntriesApplied += summary.entryCount
+                totalUniqueKeysApplied.formUnion(summary.uniqueKeys)
+                totalMachinesUpdated += importSummary.updatedMachineCount
+
+                context.console.print(
+                    "Applied \(summary.entryCount) entries from \(filename); Fly updated \(importSummary.updatedMachineCount) machine(s)."
+                )
             }
 
-            context.console.success("Successfully imported Fly secrets into \(appName).")
+            context.console.success(
+                "Successfully imported \(totalEntriesApplied) entries across \(totalUniqueKeysApplied.count) unique key(s) into \(appName); Fly updated \(totalMachinesUpdated) machine(s)."
+            )
         }
     }
 
-    private func importSecrets(content: String, appName: String, context: CommandContext) throws {
+    private func importSecrets(content: String, appName: String, context: CommandContext) throws -> FlySecretImportSummary {
         let normalizedAppName = appName.trimmingCharacters(in: .whitespacesAndNewlines)
         if normalizedAppName.isEmpty {
             context.console.error("Error: app-name cannot be empty.")
@@ -218,6 +234,29 @@ internal struct DeployFlySecretsCommand: Command {
             context.console.print("Please ensure 'fly auth login' has completed and the app name is correct.")
             throw CLIError.shellError(message: "Failed to import Fly secrets.", error: output.stderr)
         }
+
+        return FlySecretImportSummary(output: output)
+    }
+
+    private func summarizeEnvFile(_ content: String) -> EnvFileSummary {
+        let lines = content.split(whereSeparator: \.isNewline)
+        var keys = [String]()
+
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+            if trimmedLine.isEmpty || trimmedLine.starts(with: "#") {
+                continue
+            }
+
+            if let separatorIndex = trimmedLine.firstIndex(of: "=") {
+                let key = String(trimmedLine[..<separatorIndex]).trimmingCharacters(in: .whitespaces)
+                if !key.isEmpty {
+                    keys.append(key)
+                }
+            }
+        }
+
+        return EnvFileSummary(entryCount: keys.count, uniqueKeys: Set(keys))
     }
 
     private func printDeploySecretsConfigHelp(using context: CommandContext) {
@@ -231,6 +270,26 @@ internal struct DeployFlySecretsCommand: Command {
         context.console.print("  }")
         context.console.print("}")
         context.console.print("Env files are imported in order, so later files override earlier values.")
+    }
+}
+
+private struct EnvFileSummary {
+    let entryCount: Int
+    let uniqueKeys: Set<String>
+}
+
+private struct FlySecretImportSummary {
+    let updatedMachineCount: Int
+
+    init(output: ShellOutput) {
+        let stdout = output.stdout ?? ""
+        let stderr = output.stderr ?? ""
+        let combinedOutput = "\(stdout)\n\(stderr)"
+
+        updatedMachineCount = combinedOutput
+            .split(whereSeparator: \.isNewline)
+            .filter { $0.contains("update succeeded") }
+            .count
     }
 }
 
