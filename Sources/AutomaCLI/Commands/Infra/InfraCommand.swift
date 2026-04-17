@@ -131,7 +131,19 @@ internal struct DeployFlySecretsCommand: Command {
     init() {}
 
     var help: String {
-        "Imports ordered Obsidian env files into each configured Fly app using fly.deploy_secrets."
+        """
+        Imports ordered Obsidian env files into each configured Fly app using fly.deploy_secrets.
+
+        Config format:
+          "fly": {
+            "deploy_secrets": {
+              "your-fly-app": ["base.env", "override.env"]
+            }
+          }
+
+        Env files are imported in order, so later files override earlier values.
+        Run without arguments to deploy secrets for every configured Fly app.
+        """
     }
 
     struct Signature: CommandSignature {
