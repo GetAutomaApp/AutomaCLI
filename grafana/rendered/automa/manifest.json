@@ -1,0 +1,18 @@
+{
+  "environment" : "automa",
+  "outputs" : [
+    {
+      "key" : "example.alert",
+      "kind" : "alert",
+      "output" : "grafana\/rendered\/automa\/alerts\/example.alert.json",
+      "source" : "grafana\/templates\/alerts\/example.alert.jsonnet"
+    },
+    {
+      "key" : "example.dashboard",
+      "kind" : "dashboard",
+      "output" : "grafana\/rendered\/automa\/dashboards\/example.dashboard.json",
+      "source" : "grafana\/templates\/dashboards\/example.dashboard.jsonnet"
+    }
+  ],
+  "renderedAt" : "2026-04-22T11:07:13Z"
+}

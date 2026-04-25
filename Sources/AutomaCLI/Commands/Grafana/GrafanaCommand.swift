@@ -13,8 +13,10 @@ internal struct GrafanaCommand: AsyncCommandGroup {
     struct Signature: CommandSignature {}
 
     var commands: [String: AnyAsyncCommand] = [
-        "setup": GrafanaSetupCommand(),
+        "init": GrafanaInitCommand(),
+        "render": GrafanaRenderCommand(),
         "apply": GrafanaApplyCommand(),
+        "sync-ids": GrafanaSyncIDsCommand(),
     ]
 
     var help: String = "Grafana related commands."

@@ -1,0 +1,19 @@
+{
+   "dashboard": {
+      "editable": true,
+      "panels": [ ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": [
+         "automa",
+         "automa"
+      ],
+      "timezone": "browser",
+      "title": "Example Dashboard (automa)",
+      "uid": "example-dashboard-automa",
+      "version": 1
+   },
+   "folder": "General",
+   "message": "Managed by automa",
+   "overwrite": true
+}

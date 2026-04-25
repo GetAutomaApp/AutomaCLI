@@ -1,0 +1,39 @@
+{
+   "annotations": {
+      "summary": "Example alert from automa"
+   },
+   "condition": "A",
+   "data": [
+      {
+         "datasourceUid": "__expr__",
+         "model": {
+            "datasource": {
+               "type": "__expr__",
+               "uid": "__expr__"
+            },
+            "expression": "1",
+            "intervalMs": 1000,
+            "maxDataPoints": 43200,
+            "refId": "A",
+            "type": "math"
+         },
+         "refId": "A",
+         "relativeTimeRange": {
+            "from": 600,
+            "to": 0
+         }
+      }
+   ],
+   "execErrState": "Error",
+   "folder": "General",
+   "for": "2m",
+   "intervalSeconds": 60,
+   "labels": {
+      "environment": "automa",
+      "service": "example"
+   },
+   "noDataState": "NoData",
+   "ruleGroup": "automa",
+   "title": "Example Alert (automa)",
+   "uid": "example-alert-automa"
+}
